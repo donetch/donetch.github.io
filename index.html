@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EnSeñas – Prototipo interactivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--acc:#0B6467;--acc-d:#0B4F52;--ink:#17262B;--ink2:#24353A;--mut:#3E4D53;--mut2:#56656B;--line:#D7E1E2;--bg:#EEF3F3;--soft:#F4F7F7;--red:#C2321F}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:#CBD6D8;font-family:'Atkinson Hyperlegible',system-ui,sans-serif;color:var(--ink)}
+button{font-family:inherit;cursor:pointer;color:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #F2B705;outline-offset:2px}
+.lex{font-family:Lexend,sans-serif}
+/* Barra del prototipo */
+#protobar{position:fixed;top:0;left:0;right:0;height:56px;display:flex;align-items:center;gap:14px;padding:0 18px;background:#17262B;color:#fff;z-index:20}
+#protobar .ttl{font-family:Lexend,sans-serif;font-weight:600;font-size:16px}
+#protobar .ttl span{opacity:.7;font-weight:500}
+.seg{display:flex;background:#2C3E44;border-radius:12px;padding:4px;gap:4px}
+.seg button{border:none;background:transparent;color:#DCE6E7;height:38px;padding:0 14px;border-radius:9px;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+.seg button[aria-pressed="true"]{background:#fff;color:var(--ink)}
+.pbtn{border:1px solid #4A5E64;background:transparent;color:#fff;height:38px;padding:0 12px;border-radius:10px;font-weight:700;font-size:14px}
+#stage{position:fixed;left:0;right:0;bottom:0;top:56px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+body.nobar #protobar{display:none}
+body.nobar #stage{top:0}
+#scaler{transform-origin:center center}
+#device{position:relative;background:var(--bg);overflow:hidden;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+/* Comunes */
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 24px;background:#fff;border-bottom:1px solid var(--line)}
+.row{display:flex;align-items:center}
+.logo{width:40px;height:40px;border-radius:11px;background:var(--acc);display:flex;align-items:center;justify-content:center}
+.brand{font-family:Lexend,sans-serif;font-weight:700;font-size:22px;letter-spacing:-.3px}
+.brand b{color:var(--acc);font-weight:700}
+.vsep{width:1px;height:30px;background:var(--line)}
+.hosp{width:36px;height:36px;border-radius:50%;border:1.5px dashed #8A9AA0;display:flex;align-items:center;justify-content:center;color:#5B6A70}
+.who{display:flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:999px;background:var(--soft)}
+.av{width:34px;height:34px;border-radius:50%;background:#D5E9E9;color:var(--acc-d);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.sess{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;background:#E3F2EC;color:#1C5E43;font-size:13px;font-weight:700}
+.sess i{width:8px;height:8px;border-radius:50%;background:#2E8B62}
+.ibtn{width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.card{background:#fff;border:1px solid var(--line);border-radius:22px}
+.vid{position:relative;border-radius:16px;background:#163C3E;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.play{position:relative;border-radius:50%;border:none;background:#fff;color:#163C3E;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.chip{position:absolute;top:12px;left:12px;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.92);color:#163C3E;font-size:13px;font-weight:700}
+.playing-bar{position:absolute;left:0;bottom:0;height:5px;background:#F2B705;animation:prog 3s linear forwards}
+@keyframes prog{from{width:0}to{width:100%}}
+.primary{border:none;background:var(--acc);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px}
+.ghost{border:1px solid var(--line);background:#fff;color:var(--ink2);font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px}
+.nav{display:flex;align-items:center;gap:12px;padding:16px 32px 20px;background:#fff;border-top:1px solid var(--line)}
+.nav .lab{font-size:14px;font-weight:700;color:var(--mut2)}
+.navbtn{flex:1 1 0;height:64px;border-radius:16px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;gap:10px;font-size:18px;font-weight:700}
+.help{width:64px;height:64px;flex:0 0 auto;border-radius:50%;border:2px solid var(--acc);background:#fff;color:var(--acc);display:flex;align-items:center;justify-content:center}
+.overlay{position:absolute;inset:0;background:rgba(12,28,31,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:32px;z-index:5}
+.dialog{position:relative;width:480px;background:#fff;border-radius:28px;padding:24px;display:flex;flex-direction:column;gap:18px;box-shadow:0 24px 60px rgba(0,0,0,.35)}
+.toast{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);background:#17262B;color:#fff;padding:14px 20px;border-radius:14px;font-size:17px;font-weight:700;display:flex;align-items:center;gap:10px;z-index:8;box-shadow:0 10px 30px rgba(0,0,0,.3);animation:tin .2s ease-out}
+@keyframes tin{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+.dot{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:rgba(37,99,235,.45);border:2px solid rgba(30,64,175,.9);pointer-events:none;z-index:9}
+.dot.miss{background:rgba(242,183,5,.5);border-color:#9A6A00}
+.pulse{animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(194,50,31,.5)}50%{box-shadow:0 0 0 14px rgba(194,50,31,0)}}
+/* Panel de test */
+#tp{position:fixed;right:16px;bottom:16px;z-index:50;font-family:'Atkinson Hyperlegible',system-ui,sans-serif;color:#2B2200}
+#tp .box{width:360px;max-height:calc(100vh - 32px);overflow:auto;background:#FFF4C2;border:2px solid #E0B400;border-radius:18px;box-shadow:0 14px 40px rgba(0,0,0,.25)}
+#tp .th{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#FFE58A;border-bottom:1px solid #E8CB55;position:sticky;top:0}
+#tp .th b{flex:1;font-family:Lexend,sans-serif;font-size:15px}
+#tp .tb{padding:12px;display:flex;flex-direction:column;gap:12px}
+#tp .sm{width:34px;height:34px;border-radius:9px;border:1px solid #D9B52E;background:#FFF8D9;display:flex;align-items:center;justify-content:center}
+#tp label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:#5C4A00}
+#tp input[type=text],#tp select,#tp textarea{font:inherit;font-size:14px;padding:8px 10px;border-radius:10px;border:1px solid #D9B52E;background:#fff;color:#2B2200}
+#tp textarea{resize:vertical;min-height:54px}
+#tp label.f{min-width:0}#tp select,#tp input[type=text]{width:100%;min-width:0}
+#tp .timer{font-family:Lexend,sans-serif;font-weight:700;font-size:38px;font-variant-numeric:tabular-nums;text-align:center;letter-spacing:.5px}
+#tp .st{font-size:12px;text-align:center;font-weight:700;color:#7A6200}
+#tp .btns{display:flex;gap:8px}
+#tp .btns button{flex:1;height:40px;border-radius:10px;border:1px solid #C9A21C;background:#fff;font-weight:700;font-size:14px}
+#tp .btns button.go{background:#2B2200;color:#FFE58A;border-color:#2B2200}
+#tp .btns button.ok{background:#1C6E4A;color:#fff;border-color:#1C6E4A}
+#tp .btns button.no{background:#fff;color:#8A2216;border-color:#D59A90}
+#tp .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+#tp .stat{background:#fff;border:1px solid #E8CB55;border-radius:10px;padding:6px 8px}
+#tp .stat .n{font-family:Lexend,sans-serif;font-weight:700;font-size:20px}
+#tp .stat .l{font-size:11px;color:#5C4A00;font-weight:700}
+#tp .stat button{border:1px solid #C9A21C;background:#FFF8D9;border-radius:6px;font-size:12px;font-weight:700;padding:0 6px;height:22px}
+#tp .opt{display:flex;align-items:center;gap:8px;font-size:13px}
+#tp .sec{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#7A6200}
+#tp table{width:100%;border-collapse:collapse;font-size:12px;background:#fff;border-radius:8px;overflow:hidden}
+#tp td,#tp th{padding:5px 6px;border-bottom:1px solid #F0DE95;text-align:left}
+#tp .mini{position:fixed;right:16px;bottom:16px;height:52px;min-width:52px;padding:0 14px;border-radius:999px;border:2px solid #E0B400;background:#FFE58A;color:#2B2200;display:flex;align-items:center;gap:8px;font-weight:700;font-variant-numeric:tabular-nums;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#tp .rec{width:10px;height:10px;border-radius:50%;background:#C2321F}
+#tp .csv{width:100%;height:90px;font-family:monospace;font-size:11px}
+#protobar .seg button{position:relative}
+.badge{position:absolute;top:4px;right:4px;width:10px;height:10px;border-radius:50%;background:#F2B705;box-shadow:0 0 0 2px #17262B}
+.spin{width:64px;height:64px;border-radius:50%;border:6px solid #D5E9E9;border-top-color:var(--acc);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#hotspot{position:fixed;right:0;bottom:0;width:56px;height:56px;z-index:49}
+</style>
+</head>
+<body>
+<div id="protobar">
+  <div class="ttl">enSeñas <span>· Prototipo interactivo</span></div>
+  <div class="seg" role="group" aria-label="Vista">
+    <button type="button" data-view="medico">Médico</button>
+    <button type="button" data-view="paciente">Paciente</button>
+  </div>
+  <div style="flex:1"></div>
+  <button type="button" class="pbtn" id="resetProto">Reiniciar prototipo</button>
+</div>
+<div id="stage"><div id="scaler"><div id="device"></div></div></div>
+<div id="tp"></div>
+<div id="hotspot" hidden></div>
+
+<script>
+(function(){
+'use strict';
+// ---------- Íconos ----------
+var I = {
+  hand:function(s,c){return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="'+(c||'currentColor')+'" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 11V5.5a1.5 1.5 0 0 1 3 0V10"/><path d="M10 9.5V4a1.5 1.5 0 0 1 3 0v6"/><path d="M13 9V5a1.5 1.5 0 0 1 3 0v6"/><path d="M16 10.5a1.5 1.5 0 0 1 3 0V14a7 7 0 0 1-7 7h-1a6 6 0 0 1-5-2.7L3.6 14.5a1.5 1.5 0 0 1 2.4-1.8L7 14"/></svg>';},
+  play:function(s){return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5Z"/></svg>';},
+  pause:function(s){return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>';},
+  plus:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 6v12M6 12h12"/></svg>',
+  menu:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>',
+  x:function(s){return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';},
+  check:function(s){return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5 10 17l9-10"/></svg>';},
+  arrow:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  help:'<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4.5"/><path d="M12 18h.01"/></svg>',
+  pic:function(s){return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L6 21"/></svg>';},
+  cam:function(s){return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="3.5"/></svg>';},
+  mic:function(s){return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg>';},
+  redo:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg>',
+  retry:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
+  trash:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6"/></svg>',
+  eye:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>',
+  eyeOff:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c6 0 10 7 10 7a17 17 0 0 1-3 3.8M6.6 6.6C3.9 8.4 2 12 2 12s4 7 10 7a9.7 9.7 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>',
+  warn:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v5M12 16.5h.01"/><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>',
+  flask:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/></svg>',
+  minus:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12"/></svg>',
+  user:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+  vol:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
+  logout:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>',
+  chev:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
+  bulb:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B6467" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.4 1 1.1 1 1.8V16h5v-.3c0-.7.4-1.4 1-1.8A6 6 0 0 0 12 3Z"/></svg>'
+};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function silhouette(w,h,fill1,fill2){return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 420 520" fill="none" aria-hidden="true" style="position:absolute;bottom:0;left:50%;margin-left:-'+(w/2)+'px"><circle cx="210" cy="150" r="72" fill="'+fill1+'"/><path d="M40 520c0-110 76-200 170-200s170 90 170 200Z" fill="'+fill1+'"/><path d="M92 360c-10-40-6-90 14-120" stroke="'+fill2+'" stroke-width="34" stroke-linecap="round"/><circle cx="108" cy="228" r="28" fill="'+fill2+'"/><path d="M330 380c18-36 26-80 14-118" stroke="'+fill2+'" stroke-width="34" stroke-linecap="round"/><circle cx="340" cy="250" r="28" fill="'+fill2+'"/></svg>';}
+
+// ---------- Datos ----------
+var SENAS=[{l:'Sí',d:'Estoy de acuerdo.',bg:'#2E7D5B'},{l:'No',d:'No estoy de acuerdo.',bg:'#5B6A70'},{l:'Me duele',d:'Siento dolor.',bg:'#B0453A'},{l:'Gracias',d:'Te agradezco.',bg:'#7A5BA8'},{l:'Tengo miedo',d:'Me siento nervioso.',bg:'#2F62B5'},{l:'Baño',msg:'Quiero ir al baño',d:'Necesito ir al baño.',bg:'#9A6A12'}];
+var FACE='M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18Z';
+var PICTOS=[
+ {l:'Números',bg:'#E8EEFB',fg:'#1F4FA8',num:true,d:'Para responder con un número, por ejemplo cuánto te duele.'},
+ {l:'Me duele',bg:'#FBE7E4',fg:'#A1281B',p:[FACE,'M8 16c1.2-1.3 2.5-2 4-2s2.8.7 4 2','M8 9.5l2 1M16 9.5l-2 1'],d:'Para decir que sientes dolor.'},
+ {l:'Náuseas',bg:'#E6F2E1',fg:'#2F6B22',p:[FACE,'M7.5 16q1.5-1.5 3 0t3 0t3 0','M9 9.5h.01M15 9.5h.01'],d:'Para decir que tienes ganas de vomitar.'},
+ {l:'Mareo',bg:'#EEE8F6',fg:'#5A3FA0',p:['M12 12m-1 0a1 1 0 0 1 2 0a2 2 0 0 1-4 0a3 3 0 0 1 6 0a4 4 0 0 1-8 0a5 5 0 0 1 10 0a6 6 0 0 1-12 0'],d:'Para decir que todo te da vueltas.'},
+ {l:'Tengo frío',bg:'#E3EEFA',fg:'#1F4FA8',p:['M12 2v20M3.3 7l17.4 10M3.3 17 20.7 7','M9 4l3 2 3-2M9 20l3-2 3 2'],d:'Para decir que sientes frío.'},
+ {l:'Tengo calor',bg:'#FCEBDD',fg:'#9A4A12',p:['M14 14.8V4a2 2 0 0 0-4 0v10.8a4 4 0 1 0 4 0Z','M12 10v6'],d:'Para decir que sientes calor o fiebre.'},
+ {l:'Tengo sed',bg:'#E1F1F4',fg:'#0B5D6E',p:['M6 3h12l-1.5 17a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1Z','M6.6 10h10.8'],d:'Para pedir agua.'},
+ {l:'Baño',msg:'Quiero ir al baño',bg:'#F0F2F3',fg:'#3E4D53',p:['M5 3h5v8H5Z','M4 11h16a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6Z','M9 17l-1 4h8l-1-4'],d:'Para pedir ir al baño.'},
+ {l:'Medicamento',bg:'#F6E6EF',fg:'#8E2F62',p:['M10.5 3.5a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7Z','M7 7l10 10'],d:'Para hablar de un remedio que tomas.'}
+];
+var SIMPLE={
+ 'Entiendo. Voy a examinarle el abdomen. Necesito que se recueste en la camilla y me indique si siente dolor cuando presione en alguna zona específica.':['Yo revisar su estómago. Usted acostarse en la camilla. Yo apretar suave. Si duele, usted avisar.','Usted acostarse en la camilla. Yo tocar su estómago. ¿Duele? Usted avisar.'],
+ '¿Cuánto le duele, del 0 al 10?':['¿Dolor cuánto? Número 0 a 10.','Dolor: 0 nada, 10 mucho. ¿Usted cuánto?'],
+ '¿Ha vomitado?':['¿Usted vomitar?','¿Usted vomitar hoy o ayer?'],
+ 'Muéstreme dónde le duele.':['Usted mostrar dónde duele.','¿Dónde duele? Usted apuntar.'],
+ '¿Entendió todo lo que le expliqué?':['¿Usted entender todo? Sí o no.','¿Todo claro? Usted responder sí o no.'],
+ 'Le vamos a tomar un examen de sangre para saber qué le pasa.':['Nosotros sacar sangre. Examen. Saber qué pasa.','Examen de sangre. Pinchar brazo. Saber qué pasa.']
+};
+var DICTADO='Le vamos a tomar un examen de sangre para saber qué le pasa.';
+var SUGS=['¿Cuánto le duele, del 0 al 10?','¿Ha vomitado?','Muéstreme dónde le duele.'];
+var CAM_TR=['Sí, me puedo acostar. Me duele abajo, a la derecha.','Me duele desde ayer. Tengo miedo.','No entiendo. ¿Puede repetir?'];
+var TASKS=[
+ {id:'T1',v:'paciente',l:'T1 · Responder «Sí» con pictogramas',goal:function(e){return e.type==='send'&&e.via==='pictos'&&e.text==='Sí';}},
+ {id:'T2',v:'paciente',l:'T2 · Enviar «Me duele» con señas guardadas',goal:function(e){return e.type==='send'&&e.via==='senas'&&e.text==='Me duele';}},
+ {id:'T3',v:'paciente',l:'T3 · Grabar y enviar una seña con la cámara',goal:function(e){return e.type==='send'&&e.via==='camara';}},
+ {id:'T4',v:'paciente',l:'T4 · Grabar con la cámara oculta y enviar',goal:function(e){return e.type==='send'&&e.via==='camara'&&e.hidden;}},
+ {id:'T5',v:'medico',l:'T5 · Médico: enviar una pregunta sugerida',goal:function(e){return e.type==='send'&&e.via==='doctor'&&e.sug;}},
+ {id:'T6',v:'medico',l:'T6 · Médico: dictar, regenerar y enviar',goal:function(e){return e.type==='send'&&e.via==='doctor'&&e.voice&&e.regen;}},
+ {id:'T7',v:'medico',l:'T7 · Médico: cerrar la consulta confirmando con el paciente',goal:function(e){return e.type==='close'&&e.kind==='consulta'&&e.asked;}},
+ {id:'T8',v:'medico',l:'T8 · Médico: cerrar sesión',goal:function(e){return e.type==='close'&&e.kind==='sesion';}},
+ {id:'T9',v:'paciente',l:'T9 · Paciente: confirmar que entendió y terminar',goal:function(e){return e.type==='close'&&e.kind==='consulta';}},
+ {id:'T10',v:'paciente',l:'T10 · Paciente: avisar que no entendió',goal:function(e){return e.type==='patientConfirm'&&!e.understood;}},
+ {id:'T11',v:'paciente',l:'T11 · Paciente: pedir que le repitan',goal:function(e){return e.type==='send'&&e.text==='No entiendo, repita';}},
+ {id:'L',v:null,l:'Exploración libre',goal:function(){return false;}}
+];
+
+// ---------- Estado ----------
+var S;
+function initState(){
+  S={view:'paciente',screen:'seleccion',modal:null,sel:-1,playing:null,toast:null,
+     patientMsg:'Me duele mucho el estómago desde ayer en la noche. También tengo náuseas y no he podido comer.',
+     patientPrev:'Hola, vengo porque me siento mal.',patientVia:'camara',
+     doctorMsg:'Yo revisar su estómago. Usted acostarse en la camilla. Si duele, usted avisar.',
+     doctorPictos:true,
+     d:{original:'Entiendo. Voy a examinarle el abdomen. Necesito que se recueste en la camilla y me indique si siente dolor cuando presione en alguna zona específica.',variant:0,listening:false,voice:true,regen:false,sug:false,sent:true},
+     cam:{st:'listo',hidden:false,count:3,rec:0,tr:0}};
+}
+initState();
+var timers={};
+function clearT(k){if(timers[k]){clearInterval(timers[k]);clearTimeout(timers[k]);timers[k]=null;}}
+
+// ---------- Prueba (test) ----------
+var store={get:function(k,d){try{var v=localStorage.getItem('ensenas-proto-'+k);return v?JSON.parse(v):d;}catch(e){return d;}},set:function(k,v){try{localStorage.setItem('ensenas-proto-'+k,JSON.stringify(v));}catch(e){}}};
+var T={mode:store.get('mode','open'),participant:store.get('participant',''),task:'T1',running:false,started:false,elapsed:0,t0:0,
+  clicks:0,miss:0,screens:0,path:[],errors:0,helpc:0,sends:0,notes:'',auto:true,heat:false,outFrame:false,
+  results:store.get('results',[]),done:null,csvShown:false};
+function now(){return performance.now();}
+function elapsed(){return T.elapsed+(T.running?now()-T.t0:0);}
+function fmt(ms){var s=ms/1000,m=Math.floor(s/60),r=s-m*60;return (m<10?'0':'')+m+':'+(r<10?'0':'')+r.toFixed(1);}
+function screenKey(){return S.view==='medico'?(S.ended?'medico-fin-'+S.closeKind:(S.closing?'medico-'+S.closing:(S.modal&&/^logout/.test(S.modal)?'medico-'+S.closeKind+'-'+S.modal:'medico'))):S.pEnded?'paciente-fin':S.pClose?'cierre-'+S.pClose:S.screen+(S.screen==='camara'?'-'+S.cam.st:'');}
+function startT(){if(T.running)return;if(!T.started){resetCounters();T.started=true;T.path=[screenKey()];T.screens=1;}T.t0=now();T.running=true;T.done=null;renderPanel();}
+function pauseT(){if(!T.running)return;T.elapsed+=now()-T.t0;T.running=false;renderPanel();}
+function resetCounters(){T.elapsed=0;T.clicks=0;T.miss=0;T.screens=0;T.path=[];T.errors=0;T.helpc=0;T.sends=0;T.heatPts=[];}
+function resetT(){T.running=false;T.started=false;resetCounters();T.notes='';T.done=null;renderPanel();render();}
+T.heatPts=[];
+function finishT(result,auto){
+  if(!T.started){return;}
+  pauseT();
+  var task=TASKS.filter(function(t){return t.id===T.task;})[0];
+  var row={fecha:new Date().toLocaleString('es-CL'),participante:T.participant||'(sin ID)',tarea:task.id,descripcion:task.l.replace(/^T\d · /,''),vista:S.view,resultado:result+(auto?' (auto)':''),tiempo_s:(T.elapsed/1000).toFixed(1),clics:T.clicks,clics_fuera:T.miss,pantallas:T.screens,ruta:T.path.join(' > '),errores:T.errors,ayuda:T.helpc,envios:T.sends,notas:T.notes};
+  T.results.push(row);store.set('results',T.results);
+  T.done=row;T.started=false;T.notes='';
+  renderPanel();
+}
+function ev(e){ // eventos del prototipo
+  if(e.type==='send')T.sends+=T.running?1:0;
+  if(T.running&&T.auto){var task=TASKS.filter(function(t){return t.id===T.task;})[0];if(task&&task.goal(e)){finishT('Completada',true);}}
+}
+function noteScreen(){if(!T.running)return;var k=screenKey();if(T.path[T.path.length-1]!==k){T.path.push(k);T.screens++;}}
+
+// ---------- Navegación ----------
+function go(screen){
+  if(S.screen==='camara'&&screen!=='camara'&&screen!=='revisar'){stopCam();}
+  S.screen=screen;S.modal=null;S.sel=-1;S.playing=null;
+  if(screen==='camara'){S.cam.st='listo';}
+  render();noteScreen();
+}
+function setView(v){S.view=v;S.modal=null;S.playing=null;render();noteScreen();layout();var k={q1:'pclose1',q2:'pclose2',waitDoc:'pclose3'}[S.pClose];if(v==='paciente'&&k&&!S.pEnded)playVid(k,3000);}
+function toast(msg){S.toast=msg;clearT('toast');render();timers.toast=setTimeout(function(){S.toast=null;render();},2200);}
+function playVid(key,ms){S.playing=key;clearT('play');render();timers.play=setTimeout(function(){S.playing=null;render();},ms||3000);}
+
+// ---------- Cámara ----------
+function stopCam(){clearT('cam');S.cam.st='listo';S.cam.count=3;S.cam.rec=0;}
+function camStart(){S.cam.st='cuenta';S.cam.count=3;render();noteScreen();clearT('cam');
+  timers.cam=setInterval(function(){S.cam.count--; if(S.cam.count<=0){clearT('cam');camRec();}else render();},1000);}
+function camRec(){S.cam.st='grabando';S.cam.rec=0;render();noteScreen();
+  timers.cam=setInterval(function(){S.cam.rec++;if(S.cam.rec>=5){clearT('cam');camDone();}else render();},1000);}
+function camDone(){clearT('cam');S.cam.st='listo';S.screen='revisar';S.cam.tr=(S.cam.tr)%CAM_TR.length;render();noteScreen();}
+
+// ---------- Video en grande ----------
+var VID={
+ intro:function(){return {t:'Cómo funciona',bg:'#163C3E'};},
+ 'opt-pictos':function(){return {t:'Pictogramas',bg:'#9A4A12',c:'Toca dibujos para decir lo que sientes o necesitas.'};},
+ 'opt-senas':function(){return {t:'Señas guardadas',bg:'#0B4F52',c:'Elige frases comunes que ya están grabadas en señas.'};},
+ 'opt-camara':function(){return {t:'Usar cámara',bg:'#1F4FA8',c:'Haz señas frente a la cámara y las traducimos al médico.'};},
+ docmsg:function(){return {t:'La doctora dice',bg:'#163C3E',c:S.doctorMsg};},
+ 'qs-repita':function(){return {t:'No entiendo, repita',bg:'#5A3FA0',c:'Seña para pedir que te lo expliquen otra vez.'};},
+ 'qs-espere':function(){return {t:'Espere',bg:'#8A5A00',c:'Seña para pedir un momento.'};},
+ pictosena:function(){var p=PICTOS[S.sel]||{l:''};return {t:p.l+' en señas',bg:'#163C3E',c:p.d};},
+ help:function(){return {t:'Ayuda',bg:'#163C3E',c:'Cómo usar enSeñas.'};}
+};
+function openVideo(k){S.vidPrev={modal:S.modal,sel:S.sel};S.modal='video';S.vidKey=k;playVid('vbig',3000);}
+function videoModal(){var m=VID[S.vidKey](),p=S.playing==='vbig';
+  return '<div class="overlay" data-a="closeModal" style="z-index:7"><div class="dialog" role="dialog" aria-modal="true" aria-label="Video: '+esc(m.t)+'" data-stop="1" style="width:740px"><div style="display:flex;align-items:center;justify-content:space-between"><h2 class="lex" style="margin:0;font-weight:700;font-size:30px">'+esc(m.t)+'</h2><button type="button" class="ibtn" style="border-radius:50%" aria-label="Cerrar" data-a="closeModal">'+I.x(22)+'</button></div>'+
+  '<div class="vid" style="height:416px;border-radius:20px;background:'+m.bg+'">'+silhouette(320,340,'#fff','#fff').replace('fill="none"','fill="none" opacity=".3"')+
+  '<button type="button" class="play" style="width:92px;height:92px;color:var(--ink)" aria-label="'+(p?'Pausar':'Reproducir')+' video" data-a="play" data-k="vbig">'+(p?I.pause(34):I.play(34))+'</button><span class="chip" style="top:16px;left:16px;font-size:14px;padding:6px 12px">'+(p?'Reproduciendo…':'En LSCh')+'</span>'+(p?'<span class="playing-bar" style="height:8px"></span>':'')+'</div>'+
+  (m.c?'<p style="margin:0;font-size:20px;line-height:1.45;color:var(--ink2);padding:14px 16px;border-radius:16px;background:var(--soft)">'+esc(m.c)+'</p>':'')+
+  '<div style="display:flex;gap:12px"><button type="button" class="ghost" style="flex:1 1 0;height:60px;border-radius:16px;font-size:18px" data-a="play" data-k="vbigRe">'+I.retry+'Ver otra vez</button>'+(/^opt-/.test(S.vidKey)?'<button type="button" class="primary" style="flex:2 1 0;height:60px;border-radius:16px;font-size:18px" data-a="go" data-s="'+S.vidKey.slice(4)+'">Elegir '+esc(m.t.toLowerCase())+' '+I.arrow+'</button>':'<button type="button" class="primary" style="flex:1 1 0;height:60px;border-radius:16px;font-size:18px" data-a="closeModal">'+I.check(22)+'Listo</button>')+'</div></div></div>';}
+
+// ---------- Envíos ----------
+function patientSend(text,via){S.patientPrev=S.patientMsg;S.patientMsg=text;S.patientVia=via;S.modal=null;S.sel=-1;toast('Enviado a la doctora');ev({type:'send',via:via,text:text,hidden:S.cam.hidden});}
+function simplify(t,v){var a=SIMPLE[t];if(a)return a[v%a.length];return t.length>70?t.split(/[.;]/)[0]+'.':t;}
+
+function startClosing(asked){S.modal=null;S.closeAsked=asked;S.closing='waiting';S.pClose='q1';if(S.screen==='camara'||S.screen==='revisar'){stopCam();}S.playing='pclose1';clearT('play');timers.play=setTimeout(function(){S.playing=null;render();},3000);render();noteScreen();}
+function endSession(asked){S.modal=null;S.ended=true;S.endedAsked=asked;render();noteScreen();ev({type:'close',kind:S.closeKind,asked:asked});}
+
+// ---------- Render: comunes ----------
+function hospLogo(s){return '<span title="Hospital de prueba" style="width:'+s+'px;height:'+s+'px;flex:0 0 auto;border-radius:10px;background:#2E8B62;color:#fff;display:flex;align-items:center;justify-content:center"><svg width="'+Math.round(s*.56)+'" height="'+Math.round(s*.56)+'" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6Z"/></svg></span>';}
+function header(patient){
+  return '<header class="hdr"><div class="row" style="gap:14px"><div class="row" style="gap:8px"><div class="logo">'+I.hand(24,'#fff')+'</div><span class="brand">en<b>Señas</b></span></div><div class="vsep"></div>'+
+   (patient?'<div class="row" style="gap:8px">'+hospLogo(36)+'<span style="font-weight:700;font-size:14px;line-height:1.15;color:var(--ink2)">Hospital<br>de prueba</span></div>':'<div class="row" style="gap:10px">'+hospLogo(40)+'<div style="display:flex;flex-direction:column;line-height:1.2"><span style="font-weight:700;font-size:15px">Hospital de prueba</span><span style="font-size:13px;color:var(--mut2)">Servicio de Urgencias · Box 4</span></div></div>')+
+   '</div><div class="row" style="gap:12px">'+
+   (patient?'<div class="who"><span class="av">MG</span><span style="display:flex;flex-direction:column;line-height:1.2"><span style="font-size:12px;color:var(--mut2)">Te atiende</span><span style="font-weight:700;font-size:14px">Dra. M. González</span></span></div><span class="sess"><i></i>Sesión · Box 4</span><button type="button" class="ibtn" aria-label="Abrir menú" data-a="menu">'+I.menu+'</button>'
+   :'<span class="sess"><i></i>Consulta activa</span><button type="button" data-a="consultaAsk" style="height:44px;padding:0 14px;border-radius:12px;border:1.5px solid #E8C9C4;background:#fff;color:#8A2216;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px">'+I.x(18)+'Cerrar consulta</button><div data-um="1" style="position:relative"><button type="button" class="who" data-a="userMenu" aria-haspopup="menu" aria-expanded="'+(S.userMenu?'true':'false')+'" style="padding-right:12px;border:1px solid var(--line)"><span class="av" style="width:36px;height:36px">MG</span><span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2"><span style="font-weight:700;font-size:14px">Dra. M. González</span><span style="font-size:12px;color:var(--mut2)">Médico de urgencias</span></span>'+I.chev+'</button>'+(S.userMenu?'<div role="menu" style="position:absolute;top:calc(100% + 8px);right:0;width:240px;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 34px rgba(0,0,0,.16);padding:8px;z-index:6"><div style="padding:8px 10px 10px;border-bottom:1px solid #E6EDEE;margin-bottom:6px"><div style="font-weight:700;font-size:14px">Dra. M. González</div><div style="font-size:12px;color:var(--mut2)">Servicio de Urgencias · Box 4</div></div><button type="button" role="menuitem" data-a="logoutAsk" style="width:100%;height:48px;border:none;border-radius:10px;background:#FBE9E6;color:#8A2216;font-size:15px;font-weight:700;display:flex;align-items:center;gap:10px;padding:0 12px">'+I.logout+'Cerrar sesión</button></div>':'')+'</div>')+
+   '</div></header>';
+}
+function docMsg(compact){
+  var p=S.playing==='docmsg';
+  var vw=compact?190:260,vh=compact?130:176;
+  return '<section aria-label="Mensaje de la doctora" class="card" style="display:flex;'+(compact?'align-items:center;':'')+'gap:'+(compact?18:20)+'px;padding:'+(compact?14:18)+'px;border-radius:'+(compact?20:22)+'px">'+
+   '<div class="vid" style="width:'+vw+'px;height:'+vh+'px;flex:0 0 auto">'+(compact?'':silhouette(170,180,'#9FC9C9','#9FC9C9').replace('fill="none"','fill="none" opacity=".35"'))+
+   '<button type="button" class="play" style="width:'+(compact?52:68)+'px;height:'+(compact?52:68)+'px" aria-label="Reproducir mensaje de la doctora en lengua de señas" data-a="play" data-k="docmsg">'+(p?I.pause(compact?20:26):I.play(compact?20:26))+'</button>'+
+   '<span class="chip" style="'+(compact?'top:8px;left:8px;font-size:12px;padding:3px 8px':'')+'">'+(p?'Reproduciendo…':'En LSCh')+'</span>'+(p?'<span class="playing-bar"></span>':'')+'</div>'+
+   '<div style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:'+(compact?6:12)+'px"><span style="font-size:14px;font-weight:700;color:var(--acc)">La doctora dice:</span><p class="lex" style="margin:0;font-weight:500;font-size:'+(compact?21:23)+'px;line-height:1.35">'+esc(S.doctorMsg)+'</p>'+
+   (!compact&&S.doctorPictos?'<div style="margin-top:auto;display:flex;gap:12px">'+pictoMini('<path d="M2 18V8M2 14h20v4M22 14v-2a3 3 0 0 0-3-3h-8v5"/><circle cx="6.5" cy="11" r="2"/>','Camilla')+pictoMini('<circle cx="12" cy="4.5" r="2"/><path d="M8 21v-6l-2-1 1.5-6h9L18 14l-2 1v6"/><ellipse cx="12" cy="12.5" rx="2.4" ry="1.8"/>','Estómago')+'</div>':'')+
+   '</div></section>';
+}
+function pictoMini(paths,l){return '<div style="width:112px;height:84px;border-radius:12px;background:var(--soft);border:1px solid #E1E8E9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--ink2)"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+paths+'</svg><span style="font-size:12px;font-weight:700">'+l+'</span></div>';}
+var QUICK={
+ repita:{l:'No entiendo, repita',d:'Para pedir que te lo expliquen otra vez.',bg:'#EEE8F6',fg:'#5A3FA0',vbg:'#5A3FA0',vk:'qs-repita',p:['M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18Z','M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4.5','M12 17.5h.01']},
+ espere:{l:'Espere',d:'Para pedir un momento.',bg:'#FFF1DC',fg:'#8A5A00',vbg:'#8A5A00',vk:'qs-espere',p:['M6 2h12M6 22h12','M7 2v4l5 6 5-6V2','M7 22v-4l5-6 5 6v4']}
+};
+function quickHelp(mode){
+  var item=function(k){var q=QUICK[k],sel=S.modal==='quick'&&S.qk===k;
+    var left=mode==='pictos'
+      ?'<span style="width:84px;flex:0 0 auto;align-self:stretch;background:'+q.bg+';color:'+q.fg+';display:flex;align-items:center;justify-content:center">'+pictoSvg(q,40,1.8)+'</span>'
+      :'<span style="width:84px;flex:0 0 auto;align-self:stretch;background:'+q.vbg+';color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">'+I.hand(24)+'<span style="font-size:11px;font-weight:700;display:flex;align-items:center;gap:3px">'+I.play(10)+'Seña</span></span>';
+    return '<button type="button" data-a="openQuick" data-q="'+k+'" style="flex:1 1 0;display:flex;align-items:stretch;padding:0;border-radius:16px;overflow:hidden;border:'+(sel?'3px solid var(--acc)':'2px solid '+q.vbg)+';background:#fff;text-align:left">'+left+'<span class="lex" style="flex:1 1 auto;align-self:center;color:var(--ink);font-size:20px;font-weight:700;padding:0 16px">'+q.l+'</span></button>';};
+  return '<div role="group" aria-label="Ayuda rápida" style="display:flex;align-items:stretch;gap:12px;padding:12px 32px;background:#FFFBEA;border-top:1px solid #F0E2A8;height:84px;box-sizing:border-box">'+item('repita')+item('espere')+'</div>';
+}
+function quickModal(mode){
+  var q=QUICK[S.qk];
+  var mid=mode==='pictos'
+    ?'<div style="height:260px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:'+q.bg+';color:'+q.fg+'">'+pictoSvg(q,180,1.3)+'</div>'+
+     '<div style="display:flex;align-items:center;gap:14px"><p style="margin:0;flex:1 1 auto;font-size:18px;line-height:1.4;color:var(--ink2)">'+q.d+'</p><button type="button" class="ghost" style="flex:0 0 auto;height:48px;padding:0 14px;border-radius:14px;font-size:15px;color:var(--acc-d)" data-a="play" data-k="'+q.vk+'">'+I.hand(20)+'Ver en señas</button></div>'
+    :'<div style="position:relative;height:300px;border-radius:18px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:'+q.vbg+'">'+silhouette(220,220,'#fff','#fff').replace('fill="none"','fill="none" opacity=".35"')+'<button type="button" class="play" style="width:80px;height:80px;color:var(--ink)" aria-label="Reproducir seña" data-a="play" data-k="qsv">'+(S.playing==='qsv'?I.pause(30):I.play(30))+'</button>'+(S.playing==='qsv'?'<span class="playing-bar"></span>':'')+'</div>'+
+     '<p style="margin:0;font-size:18px;line-height:1.4;color:var(--ink2);padding:12px 14px;border-radius:16px;background:var(--soft)">'+q.d+'</p>';
+  return '<div class="overlay" data-a="closeModal"><div class="dialog" role="dialog" aria-modal="true" aria-label="'+esc(q.l)+'" data-stop="1"><div style="display:flex;align-items:center;justify-content:space-between"><h2 class="lex" style="margin:0;font-weight:700;font-size:30px">'+q.l+'</h2><button type="button" class="ibtn" style="border-radius:50%" aria-label="Cerrar" data-a="closeModal">'+I.x(22)+'</button></div>'+mid+
+   '<div style="display:flex;gap:12px"><button type="button" class="ghost" style="flex:1 1 0;height:60px;border-radius:16px;font-size:18px" data-a="closeModal">Quitar</button><button type="button" class="primary" style="flex:2 1 0;height:60px;border-radius:16px;font-size:18px" data-a="sendQuick">'+I.check(22)+'Aceptar y enviar</button></div></div></div>';
+}
+function bottomNav(cur){
+  var b='';
+  if(cur!=='pictos')b+='<button type="button" class="navbtn" style="background:#FFF6EE;color:#7A3A0C" data-a="go" data-s="pictos">'+I.pic(26)+'Pictogramas</button>';
+  if(cur!=='senas')b+='<button type="button" class="navbtn" style="background:#EAF4F4;color:var(--acc-d)" data-a="go" data-s="senas">'+I.hand(26)+'Señas guardadas</button>';
+  if(cur!=='camara')b+='<button type="button" class="navbtn" style="background:#F1F5FC;color:#1F4FA8" data-a="go" data-s="camara">'+I.cam(26)+'Cámara</button>';
+  return '<nav class="nav" aria-label="Otras formas de comunicarte"><span class="lab">Cambiar a:</span>'+b+'<button type="button" class="help" aria-label="Ayuda" data-a="help">'+I.help+'</button></nav>';
+}
+function pictoSvg(p,size,sw){if(p.num)return '<span class="lex" aria-hidden="true" style="font-weight:700;font-size:'+Math.round(size*.42)+'px;letter-spacing:-1px">0–10</span>';return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+(sw||1.5)+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+p.p.map(function(d){return '<path d="'+d+'"/>';}).join('')+'</svg>';}
+
+// ---------- Pantallas paciente ----------
+function scrSeleccion(){
+  var p=S.playing==='intro';
+  var opts=[{s:'pictos',t:'Pictogramas',ic:I.pic(24),ib:'#FCEBDD',if_:'#9A4A12',vb:'#F6DCC6',d:'Toca dibujos para decir lo que sientes o necesitas.'},
+            {s:'senas',t:'Señas guardadas',ic:I.hand(24),ib:'#D5E9E9',if_:'#0B4F52',vb:'#C3DFDF',d:'Elige frases comunes que ya están grabadas en señas.'},
+            {s:'camara',t:'Usar cámara',ic:I.cam(24),ib:'#DEE6F6',if_:'#1F4FA8',vb:'#CBD7F0',d:'Haz señas frente a la cámara y las traducimos al médico.'}];
+  return header(true)+'<main style="flex:1 1 auto;display:flex;flex-direction:column;align-items:center;gap:28px;padding:40px 32px 32px">'+
+   '<div style="display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center"><h1 class="lex" style="margin:0;font-weight:700;font-size:40px;letter-spacing:-.5px;line-height:1.15">¿Cómo quieres comunicarte?</h1><p style="margin:0;font-size:19px;color:var(--mut);max-width:560px;line-height:1.45">Elige la forma más cómoda para ti. Puedes cambiarla cuando quieras.</p></div>'+
+   '<figure style="margin:0;width:600px;display:flex;flex-direction:column;gap:10px"><div class="vid" style="width:600px;height:338px;border-radius:22px">'+silhouette(220,240,'#9FC9C9','#9FC9C9').replace('fill="none"','fill="none" opacity=".35"')+
+   '<button type="button" class="play" style="width:84px;height:84px" aria-label="Reproducir video explicativo" data-a="bigVid" data-k="intro">'+I.play(32)+'</button><span class="chip">En LSCh</span></div><figcaption style="font-size:16px;color:var(--mut);text-align:center">Mira este video para saber cómo funciona.</figcaption></figure>'+
+   '<div style="width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">'+opts.map(function(o){var pk='opt-'+o.s,pp=S.playing===pk;
+     return '<article class="card" style="padding:18px;display:flex;flex-direction:column;gap:14px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><h2 class="lex" style="margin:0;font-weight:600;font-size:20px">'+o.t+'</h2><span style="width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:'+o.ib+';color:'+o.if_+'">'+o.ic+'</span></div>'+
+     '<div style="position:relative;height:170px;border-radius:16px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:'+o.vb+'"><button type="button" class="play" style="width:56px;height:56px;color:var(--ink)" aria-label="Ver video de '+o.t+'" data-a="bigVid" data-k="'+o.s+'">'+I.play(22)+'</button></div>'+
+     '<p style="margin:0;font-size:16px;line-height:1.45;color:var(--mut);flex:1 1 auto">'+o.d+'</p><button type="button" class="primary" style="height:54px;border-radius:14px;font-size:17px" data-a="go" data-s="'+o.s+'">Elegir '+I.arrow+'</button></article>';}).join('')+'</div></main>';
+}
+function scrSenas(){
+  var cards=SENAS.map(function(s,i){var sel=S.modal==='sena'&&S.sel===i;
+    return '<button type="button" data-a="openSena" data-i="'+i+'" style="text-align:left;padding:12px;border-radius:20px;background:#fff;display:flex;flex-direction:column;gap:6px;border:'+(sel?'3px solid var(--acc)':'1px solid var(--line)')+'"><span style="position:relative;height:112px;border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:4px;background:'+s.bg+'"><svg width="90" height="80" viewBox="0 0 220 200" fill="none" aria-hidden="true" style="position:absolute;bottom:0;left:50%;margin-left:-45px;opacity:.4"><circle cx="110" cy="60" r="40" fill="#fff"/><path d="M30 200c0-50 36-90 80-90s80 40 80 90Z" fill="#fff"/></svg><span style="position:relative;width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.95);color:var(--ink);display:flex;align-items:center;justify-content:center">'+I.play(18)+'</span></span><span class="lex" style="font-weight:600;font-size:19px">'+s.l+'</span><span style="font-size:14px;line-height:1.35;color:var(--mut2)">'+s.d+'</span></button>';}).join('');
+  var modal='';
+  if(S.modal==='sena'){var s=SENAS[S.sel],pp=S.playing==='sena';
+    modal='<div class="overlay" data-a="closeModal"><div class="dialog" role="dialog" aria-modal="true" aria-label="Seña: '+esc(s.l)+'" data-stop="1"><div style="display:flex;align-items:center;justify-content:space-between"><h2 class="lex" style="margin:0;font-weight:700;font-size:30px">'+s.l+'</h2><button type="button" class="ibtn" style="border-radius:50%" aria-label="Cerrar" data-a="closeModal">'+I.x(22)+'</button></div>'+
+    '<div style="position:relative;height:300px;border-radius:18px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:'+s.bg+'">'+silhouette(220,220,'#fff','#fff').replace('fill="none"','fill="none" opacity=".35"')+'<button type="button" class="play" style="width:80px;height:80px;color:var(--ink)" aria-label="Reproducir seña" data-a="play" data-k="sena">'+(pp?I.pause(30):I.play(30))+'</button>'+(pp?'<span class="playing-bar"></span>':'')+'</div>'+
+    '<p style="margin:0;font-size:18px;line-height:1.4;color:var(--ink2);padding:12px 14px;border-radius:16px;background:var(--soft)">'+s.d+'</p>'+
+    '<div style="display:flex;gap:12px"><button type="button" class="ghost" style="flex:1 1 0;height:60px;border-radius:16px;font-size:18px" data-a="closeModal">Quitar</button><button type="button" class="primary" style="flex:2 1 0;height:60px;border-radius:16px;font-size:18px" data-a="sendSena">'+I.check(22)+'Aceptar y enviar</button></div></div></div>';}
+  return header(true)+'<main style="flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:20px;padding:24px 32px 20px">'+docMsg(false)+
+   '<div style="display:flex;align-items:baseline;justify-content:space-between"><h1 class="lex" style="margin:0;font-weight:700;font-size:26px">Elige una seña para responder</h1><span style="font-size:15px;color:var(--mut2)">Toca una tarjeta para verla</span></div>'+
+   '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px">'+cards+'</div></main>'+quickHelp('senas')+bottomNav('senas')+(S.modal==='quick'?quickModal('senas'):modal);
+}
+function scrPictos(){
+  var cards=PICTOS.map(function(p,i){var sel=S.modal==='picto'&&S.sel===i;
+    return '<button type="button" data-a="openPicto" data-i="'+i+'" style="padding:12px;border-radius:20px;background:#fff;display:flex;flex-direction:column;gap:10px;border:'+(sel?'3px solid var(--acc)':'1px solid var(--line)')+'"><span style="height:92px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:'+p.bg+';color:'+p.fg+'">'+pictoSvg(p,64)+'</span><span class="lex" style="font-weight:600;font-size:18px;text-align:center">'+p.l+'</span></button>';}).join('');
+  var modal='';
+  if(S.modal==='picto'&&PICTOS[S.sel].num){
+    var nums='';for(var n=0;n<=10;n++){var hue=Math.round(140-n*14),on=S.num===n;
+      nums+='<button type="button" data-a="pickNum" data-n="'+n+'" aria-pressed="'+on+'" class="lex" style="height:84px;padding:0;border-radius:14px;font-size:28px;font-weight:700;border:'+(on?'3px solid var(--ink)':'2px solid hsl('+hue+',45%,70%)')+';background:'+(on?'var(--ink)':'hsl('+hue+',60%,93%)')+';color:'+(on?'#fff':'var(--ink)')+'">'+n+'</button>';}
+    modal='<div class="overlay" data-a="closeModal"><div class="dialog" role="dialog" aria-modal="true" aria-label="Números del 0 al 10" data-stop="1" style="width:780px"><div style="display:flex;align-items:center;justify-content:space-between"><h2 class="lex" style="margin:0;font-weight:700;font-size:30px">Elige un número</h2><button type="button" class="ibtn" style="border-radius:50%" aria-label="Cerrar" data-a="closeModal">'+I.x(22)+'</button></div>'+
+    '<div role="group" aria-label="Del 0 al 10" style="display:grid;grid-template-columns:repeat(11,minmax(0,1fr));gap:6px">'+nums+'</div>'+
+    '<div style="display:flex;justify-content:space-between;font-size:15px;font-weight:700;color:var(--mut)"><span>0 = nada</span><span>10 = máximo</span></div>'+
+    '<div style="display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:16px;background:var(--soft)"><p style="margin:0;flex:1 1 auto;font-size:18px;line-height:1.4;color:var(--ink2)">'+(S.num==null?'Toca un número.':'Vas a enviar: <b>'+S.num+' de 10</b>')+'</p><button type="button" class="ghost" style="flex:0 0 auto;height:48px;padding:0 14px;border-radius:14px;font-size:15px;color:var(--acc-d)" data-a="play" data-k="pictosena">'+I.hand(20)+'Ver en señas</button></div>'+
+    '<div style="display:flex;gap:12px"><button type="button" class="ghost" style="flex:1 1 0;height:60px;border-radius:16px;font-size:18px" data-a="closeModal">Quitar</button><button type="button" class="primary" style="flex:2 1 0;height:60px;border-radius:16px;font-size:18px;'+(S.num==null?'opacity:.45':'')+'" data-a="sendPicto"'+(S.num==null?' disabled':'')+'>'+I.check(22)+'Aceptar y enviar</button></div></div></div>';}
+  else if(S.modal==='picto'){var p=PICTOS[S.sel];
+    modal='<div class="overlay" data-a="closeModal"><div class="dialog" role="dialog" aria-modal="true" aria-label="Pictograma: '+esc(p.l)+'" data-stop="1"><div style="display:flex;align-items:center;justify-content:space-between"><h2 class="lex" style="margin:0;font-weight:700;font-size:30px">'+p.l+'</h2><button type="button" class="ibtn" style="border-radius:50%" aria-label="Cerrar" data-a="closeModal">'+I.x(22)+'</button></div>'+
+    '<div style="height:280px;border-radius:18px;display:flex;align-items:center;justify-content:center;background:'+p.bg+';color:'+p.fg+'">'+pictoSvg(p,200,1.3)+'</div>'+
+    '<div style="display:flex;align-items:center;gap:14px"><p style="margin:0;flex:1 1 auto;font-size:18px;line-height:1.4;color:var(--ink2)">'+p.d+'</p><button type="button" class="ghost" style="flex:0 0 auto;height:48px;padding:0 14px;border-radius:14px;font-size:15px;color:var(--acc-d)" data-a="play" data-k="pictosena">'+I.hand(20)+(S.playing==='pictosena'?'Reproduciendo…':'Ver en señas')+'</button></div>'+
+    '<div style="display:flex;gap:12px"><button type="button" class="ghost" style="flex:1 1 0;height:60px;border-radius:16px;font-size:18px" data-a="closeModal">Quitar</button><button type="button" class="primary" style="flex:2 1 0;height:60px;border-radius:16px;font-size:18px" data-a="sendPicto">'+I.check(22)+'Aceptar y enviar</button></div></div></div>';}
+  return header(true)+'<main style="flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:20px;padding:24px 32px 20px">'+docMsg(false)+
+   '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><h1 class="lex" style="margin:0;font-weight:700;font-size:26px">Elige un dibujo para responder</h1></div>'+
+   '<div role="group" aria-label="Respuesta rápida" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px">'+
+   '<button type="button" data-a="quick" data-t="Sí" class="lex" style="height:84px;border-radius:20px;border:2px solid #2E7D5B;background:#E6F3EC;color:#1C5E43;display:flex;align-items:center;justify-content:center;gap:14px;font-size:28px;font-weight:700"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+FACE+'"/><path d="M7.5 12.5 10.5 15.5 16.5 9"/></svg>Sí</button>'+
+   '<button type="button" data-a="quick" data-t="No" class="lex" style="height:84px;border-radius:20px;border:2px solid #A1281B;background:#FBE9E6;color:#8A2216;display:flex;align-items:center;justify-content:center;gap:14px;font-size:28px;font-weight:700"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+FACE+'"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7"/></svg>No</button></div>'+
+   '<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px">'+cards+'</div></main>'+quickHelp('pictos')+bottomNav('pictos')+(S.modal==='quick'?quickModal('pictos'):modal);
+}
+function scrCamara(){
+  var c=S.cam,hid=c.hidden,inF=!T.outFrame,col=inF?'#1C6E4A':'#A64B0C',inner='';
+  if(!hid){inner='<div style="position:absolute;inset:0">'+silhouette(420,520,'#4C6266','#5E777B').replace('margin-left:-210px','margin-left:'+(inF?-210:-60)+'px')+'<div style="position:absolute;left:90px;right:90px;top:70px;bottom:0;border:3px dashed '+(inF?'rgba(255,255,255,.55)':'#F2A65A')+';border-bottom:none;border-radius:28px 28px 0 0"></div></div>';}
+  else{inner='<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--mut);text-align:center;padding:40px 40px 140px"><div style="position:relative;width:280px;height:200px;border-radius:22px;background:#fff;overflow:hidden;border:4px dashed '+col+'"><svg width="96" height="110" viewBox="0 0 96 110" fill="none" aria-hidden="true" style="position:absolute;bottom:0;'+(inF?'left:50%;margin-left:-48px;color:#7FA6A4':'left:-34px;color:#D9A27A')+'"><circle cx="48" cy="30" r="20" fill="currentColor"/><path d="M8 110c0-30 18-52 40-52s40 22 40 52Z" fill="currentColor"/></svg></div><span class="lex" style="font-weight:700;font-size:26px;color:'+col+'">'+(inF?'Estás dentro del marco':'Muévete un poco a tu izquierda')+'</span><span style="font-size:16px;max-width:440px;line-height:1.4">Tu cámara está oculta, pero sigue funcionando. Te avisamos si sales del marco.</span></div>';}
+  var st='';
+  if(c.st==='listo'){st='<div style="position:absolute;left:0;right:0;bottom:0;padding:24px;display:flex;flex-direction:column;align-items:center;gap:12px"><span style="padding:10px 16px;border-radius:12px;font-size:17px;background:'+(hid?'#fff':'rgba(0,0,0,.55)')+';color:'+(hid?'var(--ink2)':'#fff')+'">Ponte dentro del marco y toca el botón cuando estés listo.</span><button type="button" data-a="camStart" style="height:76px;padding:0 34px 0 22px;border-radius:999px;border:none;background:var(--red);color:#fff;display:flex;align-items:center;gap:14px;font-size:22px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.25)"><span style="width:36px;height:36px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center"><span style="width:16px;height:16px;border-radius:50%;background:#fff"></span></span>Comenzar a grabar</button></div>';}
+  if(c.st==='cuenta'){st='<div style="position:absolute;inset:0;background:rgba(12,28,31,.45);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px"><span style="font-size:26px;font-weight:700;color:#fff">Comienza en</span><span class="lex" style="width:200px;height:200px;border-radius:50%;background:#fff;color:var(--acc);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:120px;line-height:1;box-shadow:0 0 0 12px rgba(255,255,255,.3)">'+c.count+'</span><span style="font-size:19px;color:#fff">Prepárate para señar</span><button type="button" data-a="camCancel" style="margin-top:8px;height:52px;padding:0 22px;border-radius:14px;border:2px solid #fff;background:transparent;color:#fff;font-size:17px;font-weight:700">Cancelar</button></div>';}
+  if(c.st==='grabando'){st='<div style="position:absolute;inset:0;border:6px solid var(--red);border-radius:24px;pointer-events:none"></div><span class="pulse" style="position:absolute;top:20px;left:20px;display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:999px;background:var(--red);color:#fff;font-size:18px;font-weight:700"><span style="width:12px;height:12px;border-radius:50%;background:#fff"></span>Grabando · 0:0'+c.rec+'</span><div style="position:absolute;left:24px;right:24px;bottom:24px;display:flex;align-items:center;gap:16px;padding:18px 20px;border-radius:20px;background:rgba(255,255,255,.96);box-shadow:0 8px 24px rgba(0,0,0,.2)"><span style="width:56px;height:56px;flex:0 0 auto;border-radius:16px;background:#FBE9E6;color:#A1281B;display:flex;align-items:center;justify-content:center">'+I.hand(30)+'</span><div style="display:flex;flex-direction:column;gap:4px;flex:1 1 auto"><span class="lex" style="font-weight:700;font-size:22px">Quédate quieto para terminar</span><span style="font-size:15px;color:var(--mut)">Cuando bajes las manos, la grabación se detiene sola.</span></div><button type="button" class="ghost" style="height:52px;padding:0 18px;border-radius:14px;font-size:16px" data-a="camStop">Detener</button></div>';}
+  var pill=hid?'<span role="status" style="position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:3;display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;color:#fff;font-size:17px;font-weight:700;white-space:nowrap;box-shadow:0 4px 14px rgba(0,0,0,.15);background:'+col+'">'+(inF?I.check(20):I.warn)+(inF?'Dentro del marco':'Fuera del marco')+'</span>':'';
+  var tog='<button type="button" data-a="camToggle" style="position:absolute;top:20px;right:20px;height:52px;padding:0 16px;border-radius:14px;border:1px solid var(--line);background:#fff;color:var(--ink2);display:flex;align-items:center;gap:8px;font-size:16px;font-weight:700;z-index:4">'+(hid?I.eye+'Mostrar cámara':I.eyeOff+'Ocultar cámara')+'</button>';
+  return header(true)+'<main style="flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:18px;padding:20px 32px 20px">'+docMsg(true)+
+   '<section aria-label="Cámara" style="position:relative;flex:1 1 auto;min-height:0;border-radius:24px;overflow:hidden;background:'+(hid?'#E2EAEB':'#22353A')+'">'+inner+tog+st+pill+'</section></main>'+bottomNav('camara');
+}
+function scrRevisar(){
+  var p=S.playing==='rec';
+  return header(true)+'<main style="flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:20px;padding:28px 32px 28px">'+
+   '<div style="display:flex;flex-direction:column;gap:6px"><h1 class="lex" style="margin:0;font-weight:700;font-size:32px">Revisa tu seña</h1><p style="margin:0;font-size:18px;color:var(--mut)">Mira tu video y confirma si entendimos bien antes de enviarlo.</p></div>'+
+   '<section aria-label="Video grabado" class="card" style="display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:24px"><div class="vid" style="height:480px;background:#22353A">'+silhouette(360,440,'#4C6266','#5E777B')+
+   '<button type="button" class="play" style="width:88px;height:88px;color:var(--ink)" aria-label="Reproducir tu seña" data-a="play" data-k="rec">'+(p?I.pause(34):I.play(34))+'</button><span class="chip" style="top:16px;left:16px;font-size:14px;padding:6px 12px">Tu grabación</span></div>'+
+   '<div style="display:flex;align-items:center;gap:12px;padding:0 6px"><span style="font-size:14px;color:var(--mut)">0:00</span><div style="flex:1 1 auto;height:8px;border-radius:4px;background:#DCE5E6;overflow:hidden;position:relative">'+(p?'<span class="playing-bar" style="height:8px;background:var(--acc)"></span>':'')+'</div><span style="font-size:14px;color:var(--mut)">0:05</span></div></section>'+
+   '<section aria-label="Traducción a texto" style="display:flex;flex-direction:column;gap:10px;padding:20px 22px;background:#E4F1F1;border:1.5px solid var(--acc);border-radius:22px"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="font-size:15px;font-weight:700;color:var(--acc-d)">Lo que entendimos:</span><span style="padding:4px 10px;border-radius:8px;background:#fff;font-size:13px;color:var(--acc-d);font-weight:700">Confianza alta</span></div><p class="lex" style="margin:0;font-weight:600;font-size:28px;line-height:1.35;color:#12302F">'+esc(CAM_TR[S.cam.tr])+'</p></section>'+
+   '<div style="margin-top:auto;display:flex;gap:12px"><button type="button" data-a="revReject" style="flex:1 1 0;height:72px;border-radius:18px;border:2px solid #E8C9C4;background:#fff;color:#A1281B;font-size:19px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px">'+I.x(24)+'Rechazar</button>'+
+   '<button type="button" class="ghost" data-a="revRetry" style="flex:1 1 0;height:72px;border-radius:18px;border-width:2px;font-size:19px">'+I.retry+'Reintentar</button>'+
+   '<button type="button" class="primary" data-a="revAccept" style="flex:1.4 1 0;height:72px;border-radius:18px;font-size:19px">'+I.check(24)+'Aceptar y enviar</button></div></main>';
+}
+function closeVideo(key,bg){var p=S.playing===key;return '<div class="vid" style="height:360px;border-radius:20px;background:'+bg+'">'+silhouette(300,320,'#fff','#fff').replace('fill="none"','fill="none" opacity=".3"')+'<button type="button" class="play" style="width:88px;height:88px;color:var(--ink)" aria-label="'+(p?'Pausar':'Reproducir')+' video en señas" data-a="play" data-k="'+key+'">'+(p?I.pause(32):I.play(32))+'</button><span class="chip" style="top:16px;left:16px;font-size:14px;padding:6px 12px">'+(p?'Reproduciendo…':'En LSCh')+'</span>'+(p?'<span class="playing-bar" style="height:8px"></span>':'')+'</div>';}
+function yesNo(action){return '<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px"><button type="button" data-a="'+action+'" data-v="no" class="lex" style="height:84px;border-radius:20px;border:2px solid #A1281B;background:#FBE9E6;color:#8A2216;display:flex;align-items:center;justify-content:center;gap:14px;font-size:28px;font-weight:700"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+FACE+'"/><path d="M8.5 8.5l7 7M15.5 8.5l-7 7"/></svg>No</button><button type="button" data-a="'+action+'" data-v="si" class="lex" style="height:84px;border-radius:20px;border:2px solid #2E7D5B;background:#E6F3EC;color:#1C5E43;display:flex;align-items:center;justify-content:center;gap:14px;font-size:28px;font-weight:700"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+FACE+'"/><path d="M7.5 12.5 10.5 15.5 16.5 9"/></svg>Sí</button></div>';}
+function closeOverlay(){
+  var wrap=function(label,inner){return '<div class="overlay" style="z-index:7"><div class="dialog" role="alertdialog" aria-modal="true" aria-label="'+label+'" style="width:740px">'+inner+'</div></div>';};
+  if(S.pClose==='q1')return wrap('La consulta terminó','<span style="align-self:flex-start;padding:5px 12px;border-radius:999px;background:#E4F1F1;color:var(--acc-d);font-size:14px;font-weight:700">Mensaje de la doctora</span><h2 class="lex" style="margin:0;font-weight:700;font-size:30px">La consulta terminó</h2>'+closeVideo('pclose1','#163C3E')+'<p style="margin:0;font-size:22px;line-height:1.4;font-weight:700;color:var(--ink)">¿Entendiste todas las indicaciones?</p>'+yesNo('pUnderstood'));
+  if(S.pClose==='q2')return wrap('¿Tienes otra pregunta?','<h2 class="lex" style="margin:0;font-weight:700;font-size:30px">¿Tienes otra pregunta?</h2>'+closeVideo('pclose2','#0B4F52')+'<p style="margin:0;font-size:18px;line-height:1.4;color:var(--mut)">Si respondes «Sí», podrás elegir cómo hacer tu pregunta. Si respondes «No», la consulta termina.</p>'+yesNo('pMoreQ'));
+  if(S.pClose==='waitDoc')return wrap('La doctora te explicará de nuevo','<div style="display:flex;align-items:center;gap:14px"><span style="width:56px;height:56px;flex:0 0 auto;border-radius:16px;background:#E4F1F1;color:var(--acc-d);display:flex;align-items:center;justify-content:center">'+I.redo.replace(/20/g,'30')+'</span><h2 class="lex" style="margin:0;font-weight:700;font-size:28px">La doctora te explicará de nuevo</h2></div>'+closeVideo('pclose3','#163C3E')+'<p style="margin:0;font-size:18px;line-height:1.4;color:var(--mut)">Espera un momento. Su nuevo mensaje aparecerá arriba en tu pantalla.</p><button type="button" class="primary" style="height:60px;border-radius:16px;font-size:18px" data-a="pCloseOk">'+I.check(22)+'Entendido</button>');
+  return '';
+}
+function scrPacienteFin(){
+  return '<header class="hdr"><div class="row" style="gap:8px"><div class="logo">'+I.hand(24,'#fff')+'</div><span class="brand">en<b>Señas</b></span></div></header><main style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;padding:32px"><div class="card" style="width:600px;padding:36px;display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;border-radius:28px"><span style="width:88px;height:88px;border-radius:50%;background:#E3F2EC;color:#1C5E43;display:flex;align-items:center;justify-content:center">'+I.check(44)+'</span><h1 class="lex" style="margin:0;font-size:34px">Consulta terminada</h1><div class="vid" style="width:100%;height:300px"><button type="button" class="play" style="width:80px;height:80px" aria-label="Ver despedida en señas" data-a="play" data-k="pfin">'+(S.playing==='pfin'?I.pause(30):I.play(30))+'</button><span class="chip">En LSCh</span>'+(S.playing==='pfin'?'<span class="playing-bar"></span>':'')+'</div><p style="margin:0;font-size:20px;line-height:1.45;color:var(--ink2)">Gracias. Ya puedes devolver la tablet al personal.</p></div></main>';
+}
+function patientOverlays(){
+  if(S.modal==='video')return videoModal();
+  if(S.modal==='help')return '<div class="overlay" data-a="closeModal"><div class="dialog" role="dialog" aria-modal="true" aria-label="Ayuda" data-stop="1"><div style="display:flex;align-items:center;justify-content:space-between"><h2 class="lex" style="margin:0;font-size:28px">Ayuda</h2><button type="button" class="ibtn" style="border-radius:50%" aria-label="Cerrar" data-a="closeModal">'+I.x(22)+'</button></div><div class="vid" style="height:240px"><button type="button" class="play" style="width:72px;height:72px" aria-label="Ver ayuda en señas" data-a="play" data-k="help">'+(S.playing==='help'?I.pause(28):I.play(28))+'</button><span class="chip">En LSCh</span>'+(S.playing==='help'?'<span class="playing-bar"></span>':'')+'</div><p style="margin:0;font-size:18px;line-height:1.45;color:var(--ink2)">Puedes responder con dibujos, con señas ya grabadas o haciendo señas a la cámara. Si algo no funciona, levanta la mano y el personal te ayudará.</p><button type="button" class="primary" style="height:58px;border-radius:16px;font-size:18px" data-a="closeModal">Entendido</button></div></div>';
+  if(S.modal==='menu')return '<div class="overlay" data-a="closeModal"><div class="dialog" role="dialog" aria-modal="true" aria-label="Menú" data-stop="1"><div style="display:flex;align-items:center;justify-content:space-between"><h2 class="lex" style="margin:0;font-size:28px">Menú</h2><button type="button" class="ibtn" style="border-radius:50%" aria-label="Cerrar" data-a="closeModal">'+I.x(22)+'</button></div>'+
+   '<button type="button" class="ghost" style="height:60px;border-radius:16px;font-size:18px;justify-content:flex-start;padding:0 18px" data-a="go" data-s="seleccion">'+I.arrow+'Elegir otra forma de comunicarme</button>'+
+   '<button type="button" class="ghost" style="height:60px;border-radius:16px;font-size:18px;justify-content:flex-start;padding:0 18px" data-a="help">'+I.help.replace(/28/g,'22')+'Ver ayuda</button></div></div>';
+  return '';
+}
+
+// ---------- Pantalla médico ----------
+function viaInfo(){return ({pictos:{l:'Pictograma',sub:'Respondió con dibujos',bg:'#FFF6EE',fg:'#7A3A0C',ic:I.pic(16)},
+  senas:{l:'Seña guardada',sub:'Respondió con señas',bg:'#EAF4F4',fg:'#0B4F52',ic:I.hand(16)},
+  rapido:{l:'Botón rápido',sub:'Usó la ayuda rápida',bg:'#FFF6D6',fg:'#6B5200',ic:I.hand(16)},
+  camara:{l:'Cámara',sub:'Traducido desde LSCh',bg:'#F1F5FC',fg:'#1F4FA8',ic:I.cam(16)}})[S.patientVia||'camara'];}
+function viaChip(){var v=viaInfo();return '<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:'+v.bg+';color:'+v.fg+';font-size:13px;font-weight:700;white-space:nowrap">'+v.ic+v.l+'</span>';}
+function viaVisual(){
+  var via=S.patientVia||'camara',m=S.patientMsg,thumb='',cap='';
+  var pv=S.playing==='pvid';
+  var playBtn=function(){return '<button type="button" class="play" style="position:relative;width:44px;height:44px;color:var(--ink)" aria-label="Ver la respuesta del paciente" data-a="play" data-k="pvid">'+(pv?I.pause(18):I.play(18))+'</button>'+(pv?'<span class="playing-bar"></span>':'');};
+  if(via==='pictos'){
+    var num=/^(\d+) de 10$/.exec(m),p=PICTOS.filter(function(x){return x.l===m||x.msg===m;})[0]||[QUICK.repita,QUICK.espere].filter(function(x){return x.l===m;})[0];
+    if(num){thumb='<span class="lex" style="width:96px;height:96px;flex:0 0 auto;border-radius:16px;background:#E8EEFB;color:#1F4FA8;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1"><span style="font-size:40px;font-weight:700">'+num[1]+'</span><span style="font-size:13px;font-weight:600">de 10</span></span>';cap='Escala del 0 al 10';}
+    else if(m==='Sí'||m==='No'){var y=m==='Sí';thumb='<span style="width:96px;height:96px;flex:0 0 auto;border-radius:16px;border:2px solid '+(y?'#2E7D5B':'#A1281B')+';background:'+(y?'#E6F3EC':'#FBE9E6')+';color:'+(y?'#1C5E43':'#8A2216')+';display:flex;align-items:center;justify-content:center"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+FACE+'"/><path d="'+(y?'M7.5 12.5 10.5 15.5 16.5 9':'M8.5 8.5l7 7M15.5 8.5l-7 7')+'"/></svg></span>';cap='Respuesta rápida';}
+    else if(p){thumb='<span style="width:96px;height:96px;flex:0 0 auto;border-radius:16px;background:'+p.bg+';color:'+p.fg+';display:flex;align-items:center;justify-content:center">'+pictoSvg(p,56)+'</span>';cap='Pictograma elegido';}
+  }else if(via==='rapido'){
+    thumb='<span class="vid" style="width:140px;height:96px;flex:0 0 auto;border-radius:14px;background:'+(m==='Espere'?'#8A5A00':'#5A3FA0')+'">'+playBtn()+'</span>';cap='Seña: '+m;
+  }else if(via==='senas'){
+    var s=SENAS.filter(function(x){return x.l===m||x.msg===m;})[0]||[QUICK.repita,QUICK.espere].filter(function(x){return x.l===m;}).map(function(x){return {bg:x.vbg};})[0]||{bg:'#163C3E'};
+    thumb='<span class="vid" style="width:140px;height:96px;flex:0 0 auto;border-radius:14px;background:'+s.bg+'">'+playBtn()+'</span>';cap='Video de la seña';
+  }else{
+    thumb='<span class="vid" style="width:140px;height:96px;flex:0 0 auto;border-radius:14px;background:#22353A">'+silhouette(80,96,'#4C6266','#5E777B')+playBtn()+'</span>';cap='Video grabado por el paciente';
+  }
+  if(!thumb)return '';
+  return '<div style="display:flex;align-items:center;gap:14px">'+thumb+'<div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:14px;font-weight:700;color:var(--mut)">'+cap+'</span></div></div>';
+}
+function scrMedico(){
+  var d=S.d,orig=d.original,simp=orig?simplify(orig,d.variant):'',pp=S.playing==='pvoice',pd=S.playing==='dvoice';
+  var bars='';var h=[8,14,22,30,18,26,34,20,12,24,32,28,16,10,20,30,36,24,14,8,18,26,22,30,16,12,24,34,28,18,10,14,22,30,20,12,8,16,26,20,14,10,18,24,16,10,8,12];
+  for(var i=0;i<h.length;i++)bars+='<span style="display:block;flex:0 0 4px;height:'+h[i]+'px;border-radius:2px;background:'+(pd?'var(--acc)':'#C9D5D7')+'"></span>';
+  var emptyCards='<div style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;border:2px dashed var(--line);border-radius:20px;min-height:180px;color:var(--mut2);font-size:17px;text-align:center;padding:20px">Escribe o dicta un mensaje abajo.<br>Aquí verás tu texto y la versión simplificada.</div>';
+  var cards=orig?'<div style="display:flex;align-items:stretch;gap:12px">'+
+    '<div class="card" style="flex:1 1 0;min-width:0;border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:12px"><div style="display:flex;align-items:center;justify-content:space-between"><span class="lex" style="font-weight:600;font-size:16px">Tu mensaje</span><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;background:var(--soft);font-size:13px;color:var(--mut)">'+(d.voice?I.mic(14)+'Dictado':'Escrito')+'</span></div><p style="margin:0;font-size:18px;line-height:1.5;color:var(--ink2)">'+esc(orig)+'</p></div>'+
+    '<div style="flex:0 0 auto;align-self:center;width:44px;height:44px;border-radius:50%;background:#fff;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--acc)">'+I.arrow+'</div>'+
+    '<div style="flex:1 1 0;min-width:0;background:#E4F1F1;border:1.5px solid var(--acc);border-radius:20px;padding:20px 22px;display:flex;flex-direction:column;gap:12px"><div style="display:flex;align-items:center;justify-content:space-between"><span class="lex" style="font-weight:600;font-size:16px;color:var(--acc-d)">Lenguaje simplificado</span><span style="padding:4px 10px;border-radius:8px;background:#fff;font-size:13px;color:var(--acc-d);font-weight:700">'+(d.sent?'Enviado ✓':'Verificar')+'</span></div><p style="margin:0;font-size:20px;line-height:1.5;color:#12302F;font-weight:700">'+esc(simp)+'</p><span style="margin-top:auto;font-size:13px;color:#2F5557">Esto es lo que verá el paciente en señas.</span></div></div>':emptyCards;
+  var dis=orig&&!d.sent?'':' disabled';
+  return header(false)+'<main style="flex:1 1 auto;min-height:0;display:flex;gap:24px;padding:24px 32px 28px">'+
+   '<section aria-label="Mensaje del paciente" class="card" style="flex:0 0 400px;display:flex;flex-direction:column;border-radius:20px;overflow:hidden"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 24px;border-bottom:1px solid #E6EDEE"><div class="row" style="gap:10px"><span style="width:36px;height:36px;border-radius:10px;background:#FCEBDD;color:#9A4A12;display:flex;align-items:center;justify-content:center">'+I.user+'</span><div style="display:flex;flex-direction:column;line-height:1.2"><span class="lex" style="font-weight:600;font-size:17px">Paciente</span><span style="font-size:13px;color:var(--mut2)">'+viaInfo().sub+'</span></div></div>'+viaChip()+'</div>'+
+   '<div style="flex:1 1 auto;padding:24px;display:flex;flex-direction:column;gap:18px"><div style="font-size:13px;color:var(--mut2);padding:12px 14px;border-radius:12px;background:var(--soft)"><b style="color:var(--mut)">Anterior:</b> '+esc(S.patientPrev)+'</div>'+viaVisual()+'<p class="lex" style="margin:0;font-weight:500;font-size:'+(S.patientMsg.length>60?24:30)+'px;line-height:1.35">'+esc(S.patientMsg)+'</p></div>'+
+   '<div style="padding:18px 24px 22px;border-top:1px solid #E6EDEE;display:flex;align-items:center;gap:14px"><button type="button" data-a="play" data-k="pvoice" aria-label="Reproducir como voz" style="width:56px;height:56px;flex:0 0 auto;border-radius:50%;border:none;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center">'+(pp?I.pause(22):I.play(22))+'</button><div style="display:flex;flex-direction:column;line-height:1.25"><span style="font-weight:700;font-size:15px">'+(pp?'Reproduciendo…':'Reproducir como voz')+'</span><span style="font-size:13px;color:var(--mut2)">Voz sintetizada</span></div></div></section>'+
+   '<section aria-label="Mensaje del personal médico" style="flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:16px">'+cards+
+   '<div style="display:flex;align-items:center;gap:12px">'+
+   '<div class="card" style="flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:14px;padding:10px 18px 10px 10px;border-radius:16px;opacity:'+(orig&&d.voice?1:.45)+'"><button type="button" class="primary" data-a="play" data-k="dvoice" aria-label="Reproducir tu audio" style="width:44px;height:44px;border-radius:12px"'+(orig&&d.voice?'':' disabled')+'>'+(pd?I.pause(18):I.play(18))+'</button><div aria-hidden="true" style="flex:1 1 auto;min-width:0;height:36px;display:flex;align-items:center;gap:3px;overflow:hidden">'+bars+'</div><span style="font-size:14px;color:var(--mut)">0:12</span></div>'+
+   '<button type="button" class="ghost" data-a="dRegen" style="height:52px;padding:0 16px;border-radius:14px;font-size:15px"'+dis+'>'+I.redo+'Regenerar</button>'+
+   '<button type="button" class="ghost" data-a="dClear" style="height:52px;padding:0 16px;border-radius:14px;font-size:15px;color:#A1281B;border-color:#E8C9C4"'+(orig?'':' disabled')+'>'+I.trash+'Borrar</button>'+
+   '<button type="button" class="primary" data-a="dSend" style="height:52px;padding:0 22px;border-radius:14px;font-size:15px;'+(dis?'opacity:.45':'')+'"'+dis+'>'+I.check(20)+'Confirmar y enviar</button></div>'+
+   '<div style="display:flex;flex-direction:column;gap:10px"><div class="row" style="gap:8px">'+I.bulb+'<span style="font-weight:700;font-size:15px">Sugerencias para continuar</span><span style="font-size:13px;color:var(--mut2)">· según lo que dijo el paciente</span></div><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">'+
+   SUGS.map(function(s){return '<button type="button" data-a="dSug" data-t="'+esc(s)+'" style="min-height:56px;padding:12px 16px;text-align:left;border-radius:14px;border:1px solid var(--line);background:#fff;font-size:16px;line-height:1.35">'+esc(s)+'</button>';}).join('')+'</div></div>'+
+   '<form data-form="composer" style="margin-top:auto;display:flex;align-items:flex-end;gap:12px;padding:12px;background:#fff;border:1.5px solid #B9C8CA;border-radius:20px"><label for="msg" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Mensaje para el paciente</label><textarea id="msg" rows="2" placeholder="'+(d.listening?'Escuchando…':'Escriba o dicte lo que quiere decirle al paciente… (Enter para generar)')+'" style="flex:1 1 auto;min-width:0;border:none;outline:none;resize:none;padding:10px 12px;font:inherit;font-size:17px;line-height:1.45;background:transparent"></textarea>'+
+   '<button type="submit" class="ghost" aria-label="Generar versión simplificada" style="width:52px;height:52px;border-radius:14px;flex:0 0 auto">'+I.arrow+'</button>'+
+   '<button type="button" data-a="dMic" aria-label="Grabar audio" class="'+(d.listening?'pulse':'')+'" style="width:64px;height:64px;flex:0 0 auto;border-radius:50%;border:none;background:'+(d.listening?'var(--red)':'var(--acc)')+';color:#fff;display:flex;align-items:center;justify-content:center">'+I.mic(28)+'</button></form>'+
+   '</section></main>';
+}
+
+function doctorOverlays(){
+  if(S.modal==='logoutConfirm')return '<div class="overlay" data-a="closeModal"><div class="dialog" role="alertdialog" aria-modal="true" aria-label="Confirmar cierre de sesión" data-stop="1" style="width:480px"><div style="display:flex;align-items:center;gap:14px"><span style="width:56px;height:56px;flex:0 0 auto;border-radius:16px;background:#FBE9E6;color:#8A2216;display:flex;align-items:center;justify-content:center">'+I.logout.replace(/20/g,'28')+'</span><h2 class="lex" style="margin:0;font-weight:700;font-size:24px;line-height:1.25">¿Estás seguro de cerrar sesión?</h2></div><div style="display:flex;gap:12px"><button type="button" class="ghost" style="flex:1 1 0;height:58px;border-radius:16px;font-size:18px" data-a="closeModal">Cancelar</button><button type="button" style="flex:1 1 0;height:58px;border-radius:16px;font-size:18px;border:none;background:#A1281B;color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px" data-a="logoutYes">'+I.logout+'Cerrar sesión</button></div></div></div>';
+  if(S.closing==='waiting')return '<div class="overlay"><div class="dialog" role="alertdialog" aria-modal="true" aria-label="Esperando confirmación del paciente" style="width:520px;align-items:center;text-align:center"><div class="spin" aria-hidden="true"></div><h2 class="lex" style="margin:0;font-weight:700;font-size:26px">Esperando confirmación del paciente…</h2><p style="margin:0;font-size:17px;line-height:1.5;color:var(--mut)">El paciente está viendo un video en lengua de señas que le pregunta si entendió todas las indicaciones.</p><button type="button" class="ghost" style="height:52px;padding:0 22px;border-radius:14px;font-size:16px" data-a="cancelClosing">Cancelar cierre de consulta</button></div></div>';
+  if(S.closing==='reexplain')return '<div class="overlay"><div class="dialog" role="alertdialog" aria-modal="true" aria-label="El paciente no entendió" style="width:540px"><div style="display:flex;align-items:center;gap:14px"><span style="width:56px;height:56px;flex:0 0 auto;border-radius:16px;background:#FFF1DC;color:#A64B0C;display:flex;align-items:center;justify-content:center">'+I.warn.replace(/20/g,'30')+'</span><h2 class="lex" style="margin:0;font-weight:700;font-size:24px;line-height:1.25">El paciente no entendió todas las indicaciones</h2></div><p style="margin:0;font-size:17px;line-height:1.5;color:var(--mut)">Por favor, explíquele de nuevo con palabras simples. Este fue su último mensaje:</p><p style="margin:0;padding:14px 16px;border-radius:14px;background:#E4F1F1;border:1.5px solid var(--acc);font-size:18px;font-weight:700;color:#12302F">«'+esc(S.doctorMsg)+'»</p><button type="button" class="primary" style="height:58px;border-radius:16px;font-size:18px" data-a="reexplain">'+I.redo+'Explicar de nuevo</button></div></div>';
+  if(S.closing==='question')return '<div class="overlay"><div class="dialog" role="alertdialog" aria-modal="true" aria-label="El paciente tiene una consulta" style="width:520px"><div style="display:flex;align-items:center;gap:14px"><span style="width:56px;height:56px;flex:0 0 auto;border-radius:16px;background:#E4F1F1;color:var(--acc-d);display:flex;align-items:center;justify-content:center">'+I.help.replace(/28/g,'30')+'</span><h2 class="lex" style="margin:0;font-weight:700;font-size:24px;line-height:1.25">El paciente tiene otra pregunta</h2></div><p style="margin:0;font-size:17px;line-height:1.5;color:var(--mut)">La consulta sigue abierta. Su mensaje aparecerá en el panel del paciente.</p><button type="button" class="primary" style="height:58px;border-radius:16px;font-size:18px" data-a="ackQuestion">Entendido</button></div></div>';
+  var head=function(ic,bg,fg,t){return '<div style="display:flex;align-items:center;gap:14px"><span style="width:56px;height:56px;flex:0 0 auto;border-radius:16px;background:'+bg+';color:'+fg+';display:flex;align-items:center;justify-content:center">'+ic+'</span><h2 class="lex" style="margin:0;font-weight:700;font-size:24px;line-height:1.25">'+t+'</h2></div>';};
+  if(S.modal==='logout1')return '<div class="overlay" data-a="closeModal"><div class="dialog" role="alertdialog" aria-modal="true" aria-label="Confirmar cierre" data-stop="1" style="width:520px">'+
+   head(I.help.replace(/28/g,'30'),'#E4F1F1','var(--acc-d)','¿Le preguntó al paciente si entendió todo?')+(S.closeKind==='sesion'?'<span style="align-self:flex-start;padding:4px 10px;border-radius:8px;background:var(--soft);font-size:13px;font-weight:700;color:var(--mut)">Va a cerrar sesión y terminar la consulta</span>':'')+
+   '<p style="margin:0;font-size:17px;line-height:1.5;color:var(--mut)">Antes de cerrar, es importante confirmar que el paciente comprendió las indicaciones.</p>'+
+   '<div style="display:flex;gap:12px"><button type="button" class="ghost" style="flex:1 1 0;height:58px;border-radius:16px;font-size:18px" data-a="logoutNo">No</button><button type="button" class="primary" style="flex:1 1 0;height:58px;border-radius:16px;font-size:18px" data-a="logoutYes">'+I.check(22)+'Sí, '+(S.closeKind==='sesion'?'cerrar sesión':'cerrar consulta')+'</button></div></div></div>';
+  if(S.modal==='logout2')return '<div class="overlay" data-a="closeModal"><div class="dialog" role="alertdialog" aria-modal="true" aria-label="Sugerencia antes de cerrar" data-stop="1" style="width:520px">'+
+   head(I.warn.replace(/20/g,'30'),'#FFF1DC','#A64B0C','Le sugerimos preguntarle antes de cerrar')+
+   '<p style="margin:0;font-size:17px;line-height:1.5;color:var(--mut)">Puede enviarle esta pregunta ahora. El paciente la verá en señas y podrá responder sí o no:</p>'+
+   '<p style="margin:0;padding:14px 16px;border-radius:14px;background:#E4F1F1;border:1.5px solid var(--acc);font-size:19px;font-weight:700;color:#12302F">«¿Entendió todo lo que le expliqué?»</p>'+
+   '<div style="display:flex;flex-direction:column;gap:10px"><button type="button" class="primary" style="height:58px;border-radius:16px;font-size:18px" data-a="askUnderstood">'+I.arrow+'Preguntarle ahora</button><button type="button" style="height:48px;border:none;background:transparent;color:#8A2216;font-size:16px;font-weight:700;text-decoration:underline" data-a="logoutForce">'+(S.closeKind==='sesion'?'Cerrar sesión':'Cerrar consulta')+' de todas formas</button></div></div></div>';
+  return '';
+}
+function scrSesionCerrada(){
+  return '<header class="hdr"><div class="row" style="gap:8px"><div class="logo">'+I.hand(24,'#fff')+'</div><span class="brand">en<b>Señas</b></span></div></header>'+
+  '<main style="flex:1 1 auto;display:flex;align-items:center;justify-content:center;padding:32px"><div class="card" style="width:520px;padding:36px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center;border-radius:28px"><span style="width:80px;height:80px;border-radius:50%;background:#E3F2EC;color:#1C5E43;display:flex;align-items:center;justify-content:center">'+I.check(40)+'</span><h1 class="lex" style="margin:0;font-size:30px">'+(S.closeKind==='sesion'?'Sesión cerrada':'Consulta finalizada')+'</h1><p style="margin:0;font-size:17px;line-height:1.5;color:var(--mut)">'+(S.closeKind==='sesion'?'Cerraste sesión y la consulta con el paciente terminó.'+(S.endedAsked?'':'<br><b style="color:#A64B0C">Se cerró sin confirmar que el paciente entendió.</b>'):'El paciente confirmó que entendió las indicaciones y no tiene más preguntas.'+(S.reexplains?'<br><span style="font-size:15px">Se explicó de nuevo '+S.reexplains+' '+(S.reexplains===1?'vez':'veces')+'.</span>':''))+'</p><button type="button" class="primary" style="height:58px;padding:0 28px;border-radius:16px;font-size:18px" data-a="newSession">'+(S.closeKind==='sesion'?'Volver a iniciar sesión':'Iniciar nueva consulta')+'</button></div></main>';
+}
+
+// ---------- Render principal ----------
+var dev=document.getElementById('device'),scaler=document.getElementById('scaler');
+function dims(){return S.view==='medico'?{w:1280,h:820}:{w:834,h:1194};}
+function layout(){var st=document.getElementById('stage'),d=dims(),pad=24;st.style.right=(T.mode==='open'&&window.innerWidth>900)?'392px':'0';var sc=Math.min((st.clientWidth-pad*2)/d.w,(st.clientHeight-pad*2)/d.h,1);scaler.style.transform='scale('+sc+')';scaler.dataset.sc=sc;dev.style.width=d.w+'px';dev.style.height=d.h+'px';}
+function render(){
+  var html='';
+  if(S.view==='medico')html=(S.ended?scrSesionCerrada():scrMedico()+doctorOverlays());
+  else if(S.pEnded)html=scrPacienteFin();
+  else{html=({seleccion:scrSeleccion,senas:scrSenas,pictos:scrPictos,camara:scrCamara,revisar:scrRevisar}[S.screen])()+(S.pClose?closeOverlay():patientOverlays());}
+  if(S.toast)html+='<div class="toast" role="status">'+I.check(20)+esc(S.toast)+'</div>';
+  if(T.heat&&T.heatPts){var k=screenKey();T.heatPts.forEach(function(p){if(p.k===k)html+='<span class="dot'+(p.m?' miss':'')+'" style="left:'+p.x+'px;top:'+p.y+'px"></span>';});}
+  // conservar borrador del médico
+  var ta=dev.querySelector('#msg'),draft=ta?ta.value:null,focus=ta&&document.activeElement===ta;
+  dev.innerHTML='<div style="display:flex;flex-direction:column;height:100%">'+html+'</div>';
+  var nta=dev.querySelector('#msg');if(nta&&draft!=null){nta.value=draft;if(focus)nta.focus();}
+  document.querySelectorAll('#protobar [data-view]').forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.view===S.view));var pend=b.dataset.view==='paciente'?(S.pClose==='q1'||S.pClose==='q2'):(S.closing==='reexplain'||S.closing==='question');var bd=b.querySelector('.badge');if(pend&&!bd){b.insertAdjacentHTML('beforeend','<span class="badge" aria-label="Pendiente"></span>');}else if(!pend&&bd){bd.remove();}});
+}
+
+// ---------- Acciones ----------
+var A={
+ go:function(el){go(el.dataset.s);},
+ play:function(el){var k=el.dataset.k;if(VID[k]&&S.modal!=='video'){openVideo(k);return;}if(k==='vbigRe'){playVid('vbig',3000);return;}if(S.playing===k){S.playing=null;clearT('play');render();}else playVid(k,k==='dvoice'?4000:3000);},
+ bigVid:function(el){var k=el.dataset.k;openVideo(k==='intro'?'intro':'opt-'+k);},
+ help:function(){S.modal='help';T.helpc+=T.running?1:0;render();},
+ menu:function(){S.modal='menu';render();},
+ closeModal:function(){S.playing=null;clearT('play');if(S.modal==='video'&&S.vidPrev){S.modal=S.vidPrev.modal;S.sel=S.vidPrev.sel;S.vidPrev=null;}else{S.modal=null;S.sel=-1;}render();},
+ openSena:function(el){S.modal='sena';S.sel=+el.dataset.i;render();},
+ openPicto:function(el){S.modal='picto';S.sel=+el.dataset.i;S.num=null;render();},
+ pickNum:function(el){S.num=+el.dataset.n;render();},
+ openQuick:function(el){S.modal='quick';S.qk=el.dataset.q;render();},
+ sendQuick:function(){patientSend(QUICK[S.qk].l,S.screen==='pictos'?'pictos':'senas');},
+ sendSena:function(){var s=SENAS[S.sel];patientSend(s.msg||s.l,'senas');},
+ sendPicto:function(){var p=PICTOS[S.sel];if(p.num){if(S.num==null)return;patientSend(S.num+' de 10','pictos');}else patientSend(p.msg||p.l,'pictos');},
+ quick:function(el){patientSend(el.dataset.t,'pictos');},
+ camStart:camStart,
+ camCancel:function(){stopCam();render();noteScreen();},
+ camStop:camDone,
+ camToggle:function(){S.cam.hidden=!S.cam.hidden;render();},
+ revAccept:function(){var t=CAM_TR[S.cam.tr];S.cam.tr=(S.cam.tr+1)%CAM_TR.length;S.screen='camara';S.cam.st='listo';patientSend(t,'camara');noteScreen();},
+ revRetry:function(){S.screen='camara';S.cam.st='listo';render();noteScreen();},
+ revReject:function(){S.cam.tr=(S.cam.tr+1)%CAM_TR.length;S.screen='camara';S.cam.st='listo';toast('Grabación descartada');noteScreen();},
+ dSug:function(el){var t=el.dataset.t;S.d={original:t,variant:0,listening:false,voice:false,regen:false,sug:true,sent:false};var ta=dev.querySelector('#msg');if(ta)ta.value='';render();},
+ dRegen:function(){S.d.variant++;S.d.regen=true;render();},
+ dClear:function(){S.d={original:'',variant:0,listening:false,voice:false,regen:false,sug:false,sent:false};render();},
+ dSend:function(){var d=S.d;if(!d.original||d.sent)return;S.doctorMsg=simplify(d.original,d.variant);S.doctorPictos=false;d.sent=true;toast('Mensaje enviado al paciente');ev({type:'send',via:'doctor',sug:d.sug,voice:d.voice,regen:d.regen});},
+ userMenu:function(){S.userMenu=!S.userMenu;render();},
+ consultaAsk:function(){S.userMenu=false;S.closeKind='consulta';S.modal='logout1';render();noteScreen();},
+ logoutAsk:function(){S.userMenu=false;S.closeKind='sesion';S.modal='logoutConfirm';render();noteScreen();},
+ logoutNo:function(){S.modal='logout2';S.logoutSaidNo=true;render();},
+ logoutYes:function(){if(S.closeKind==='consulta')startClosing(true);else endSession(true);},
+ logoutForce:function(){if(S.closeKind==='consulta')startClosing(false);else endSession(false);},
+ cancelClosing:function(){S.closing=null;S.pClose=null;S.playing=null;render();noteScreen();},
+ reexplain:function(){S.closing=null;S.d={original:'',variant:0,listening:false,voice:false,regen:false,sug:false,sent:false};render();noteScreen();var ta=dev.querySelector('#msg');if(ta)ta.focus();},
+ ackQuestion:function(){S.closing=null;render();noteScreen();},
+ pUnderstood:function(el){var y=el.dataset.v==='si';ev({type:'patientConfirm',understood:y});
+   if(y){S.pClose='q2';playVid('pclose2',3000);noteScreen();}
+   else{S.pClose='waitDoc';S.closing='reexplain';S.reexplains=(S.reexplains||0)+1;playVid('pclose3',3000);noteScreen();}},
+ pMoreQ:function(el){var y=el.dataset.v==='si';
+   if(y){S.pClose=null;S.closing='question';go('seleccion');}
+   else{S.pClose=null;S.pEnded=true;S.closing=null;endSession(S.closeAsked);}},
+ pCloseOk:function(){S.pClose=null;render();noteScreen();},
+ askUnderstood:function(){S.modal=null;S.d={original:'¿Entendió todo lo que le expliqué?',variant:0,listening:false,voice:false,regen:false,sug:true,sent:false};render();},
+ newSession:function(){var v=S.view;Object.keys(timers).forEach(clearT);initState();S.view=v;render();noteScreen();},
+ dMic:function(){if(S.d.listening)return;S.d.listening=true;render();clearT('mic');timers.mic=setTimeout(function(){S.d={original:DICTADO,variant:0,listening:false,voice:true,regen:false,sug:false,sent:false};render();},1800);}
+};
+dev.addEventListener('click',function(e){
+  var el=e.target.closest('[data-a]');
+  if(S.userMenu&&!e.target.closest('[data-um]')){S.userMenu=false;if(!el){render();return;}}
+  if(!el)return;
+  if(el.dataset.a==='closeModal'&&el.classList.contains('overlay')&&e.target.closest('[data-stop]'))return;
+  if(el.disabled)return;
+  var f=A[el.dataset.a];if(f){e.preventDefault();f(el);}
+});
+dev.addEventListener('submit',function(e){e.preventDefault();var ta=dev.querySelector('#msg');var t=(ta.value||'').trim();if(!t)return;S.d={original:t,variant:0,listening:false,voice:false,regen:false,sug:false,sent:false};ta.value='';render();});
+dev.addEventListener('keydown',function(e){if(e.target.id==='msg'&&e.key==='Enter'&&!e.shiftKey){e.preventDefault();dev.querySelector('form[data-form]').requestSubmit();}});
+// Conteo de clics (captura)
+dev.addEventListener('pointerdown',function(e){
+  if(!T.running)return;
+  T.clicks++;
+  var hit=e.target.closest('button,a,input,textarea,select,label,[data-a]');
+  var miss=!hit||(hit.classList&&hit.classList.contains('overlay')&&e.target.closest('[data-stop]'));
+  if(miss)T.miss++;
+  var r=dev.getBoundingClientRect(),sc=+scaler.dataset.sc||1;
+  T.heatPts.push({k:screenKey(),x:Math.round((e.clientX-r.left)/sc),y:Math.round((e.clientY-r.top)/sc),m:!!miss});
+  updateCounters();
+  if(T.heat){var pt=T.heatPts[T.heatPts.length-1],dot=document.createElement('span');dot.className='dot'+(pt.m?' miss':'');dot.style.left=pt.x+'px';dot.style.top=pt.y+'px';(dev.firstElementChild||dev).appendChild(dot);}
+},true);
+
+document.querySelectorAll('#protobar [data-view]').forEach(function(b){b.addEventListener('click',function(){setView(b.dataset.view);});});
+document.getElementById('resetProto').addEventListener('click',function(){Object.keys(timers).forEach(clearT);var v=S.view;initState();S.view=v;render();layout();});
+window.addEventListener('resize',layout);
+
+// ---------- Panel de modo test ----------
+var tp=document.getElementById('tp'),hot=document.getElementById('hotspot');
+function setMode(m){T.mode=m;store.set('mode',m);renderPanel();layout();}
+function updateCounters(){var q=function(id,v){var el=document.getElementById(id);if(el)el.textContent=v;};q('tpc',T.clicks);q('tpm',T.miss);q('tps',T.screens);q('tpe',T.errors);q('tph',T.helpc);q('tpn',T.sends);}
+function csv(){var cols=['fecha','participante','tarea','descripcion','vista','resultado','tiempo_s','clics','clics_fuera','pantallas','ruta','errores','ayuda','envios','notas'];
+  return [cols.join(',')].concat(T.results.map(function(r){return cols.map(function(c){var v=String(r[c]==null?'':r[c]);return /[",\n;]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}).join(',');})).join('\n');}
+function summary(){var by={};T.results.forEach(function(r){var b=by[r.tarea]=by[r.tarea]||{n:0,ok:0,t:0,c:0};b.n++;if(/^Completada/.test(r.resultado))b.ok++;b.t+=+r.tiempo_s;b.c+=+r.clics;});
+  var ks=Object.keys(by).sort();if(!ks.length)return '<p style="margin:0;font-size:13px">Aún no hay intentos guardados.</p>';
+  return '<table><thead><tr><th>Tarea</th><th>Intentos</th><th>Éxito</th><th>Tiempo prom.</th><th>Clics prom.</th></tr></thead><tbody>'+ks.map(function(k){var b=by[k];return '<tr><td>'+k+'</td><td>'+b.n+'</td><td>'+Math.round(b.ok/b.n*100)+'%</td><td>'+(b.t/b.n).toFixed(1)+' s</td><td>'+(b.c/b.n).toFixed(1)+'</td></tr>';}).join('')+'</tbody></table>';}
+function renderPanel(){
+  hot.hidden=T.mode!=='hidden';
+  if(T.mode==='hidden'){tp.innerHTML='';return;}
+  if(T.mode==='mini'){tp.innerHTML='<button type="button" class="mini" data-t="open" aria-label="Abrir panel de modo test">'+I.flask+(T.running?'<span class="rec"></span><span id="tpt">'+fmt(elapsed())+'</span>':(T.started?'<span id="tpt">'+fmt(elapsed())+'</span>':''))+'</button>';return;}
+  var task=TASKS.filter(function(t){return t.id===T.task;})[0];
+  var stLabel=T.running?'Grabando datos…':(T.started?'En pausa':(T.done?'Intento guardado: '+T.done.resultado:'Listo para empezar'));
+  tp.innerHTML='<div class="box" role="region" aria-label="Panel de modo test">'+
+  '<div class="th">'+I.flask+'<b>Modo test</b><button type="button" class="sm" data-t="mini" aria-label="Minimizar" title="Minimizar">'+I.minus+'</button><button type="button" class="sm" data-t="hide" aria-label="Ocultar (Ctrl+Shift+T para volver)" title="Ocultar · Ctrl+Shift+T o 3 toques en la esquina para volver">'+I.eyeOff.replace(/22/g,'18')+'</button></div>'+
+  '<div class="tb">'+
+   '<div style="display:grid;grid-template-columns:1fr 1.6fr;gap:8px"><label class="f">Participante<input type="text" id="tpPart" value="'+esc(T.participant)+'" placeholder="P01"></label><label class="f">Tarea<select id="tpTask">'+TASKS.map(function(t){return '<option value="'+t.id+'"'+(t.id===T.task?' selected':'')+'>'+esc(t.l)+'</option>';}).join('')+'</select></label></div>'+
+   (task.v&&task.v!==S.view?'<div style="font-size:12px;background:#FFE58A;padding:6px 8px;border-radius:8px">Esta tarea es para la vista <b>'+(task.v==='medico'?'Médico':'Paciente')+'</b>. <button type="button" data-t="view" style="border:1px solid #C9A21C;background:#fff;border-radius:6px;font-weight:700;font-size:12px">Cambiar</button></div>':'')+
+   '<div><div class="timer" id="tpt">'+fmt(elapsed())+'</div><div class="st">'+esc(stLabel)+'</div></div>'+
+   '<div class="btns">'+(T.running?'<button type="button" data-t="pause">Pausar</button>':'<button type="button" class="go" data-t="start">'+(T.started?'Reanudar':'Iniciar')+'</button>')+'<button type="button" data-t="reset">Reiniciar</button></div>'+
+   '<div class="stats">'+
+    '<div class="stat"><div class="n" id="tpc">'+T.clicks+'</div><div class="l">Clics</div></div>'+
+    '<div class="stat"><div class="n" id="tpm">'+T.miss+'</div><div class="l">Fuera de botón</div></div>'+
+    '<div class="stat"><div class="n" id="tps">'+T.screens+'</div><div class="l">Pantallas</div></div>'+
+    '<div class="stat"><div class="n" id="tpe">'+T.errors+'</div><div class="l" style="display:flex;gap:4px;align-items:center">Errores <button type="button" data-t="err+" aria-label="Sumar error">+1</button><button type="button" data-t="err-" aria-label="Restar error">−1</button></div></div>'+
+    '<div class="stat"><div class="n" id="tph">'+T.helpc+'</div><div class="l">Usó ayuda</div></div>'+
+    '<div class="stat"><div class="n" id="tpn">'+T.sends+'</div><div class="l">Envíos</div></div>'+
+   '</div>'+
+   '<label class="f">Observaciones<textarea id="tpNotes" placeholder="Dudas, comentarios, dónde se trabó…">'+esc(T.notes)+'</textarea></label>'+
+   '<div class="btns"><button type="button" class="ok" data-t="ok"'+(T.started?'':' disabled')+'>✓ Completada</button><button type="button" class="no" data-t="fail"'+(T.started?'':' disabled')+'>✗ No completada</button></div>'+
+   '<div class="sec">Opciones</div>'+
+   '<label class="opt"><input type="checkbox" id="tpAuto"'+(T.auto?' checked':'')+'> Terminar sola al cumplir la tarea</label>'+
+   '<label class="opt"><input type="checkbox" id="tpHeat"'+(T.heat?' checked':'')+'> Mostrar mapa de clics (azul: botón · amarillo: fuera)</label>'+
+   '<label class="opt"><input type="checkbox" id="tpFrame"'+(T.outFrame?' checked':'')+'> Simular «fuera del marco» en la cámara</label>'+
+   '<label class="opt"><input type="checkbox" id="tpBar"'+(document.body.classList.contains('nobar')?' checked':'')+'> Ocultar barra superior del prototipo</label>'+
+   '<div class="sec">Resultados ('+T.results.length+')</div>'+summary()+
+   '<div class="btns"><button type="button" data-t="dl">Descargar CSV</button><button type="button" data-t="copy">Copiar CSV</button><button type="button" data-t="clear">Borrar</button></div>'+
+   (T.csvShown?'<textarea class="csv" readonly aria-label="Datos CSV">'+esc(csv())+'</textarea>':'')+
+   '<div id="tpMsg" style="font-size:12px;min-height:14px"></div>'+
+   '<div style="font-size:11px;color:#7A6200">Los resultados se guardan solo en este navegador. Atajo: Ctrl+Shift+T muestra u oculta el panel.</div>'+
+  '</div></div>';
+}
+function msg(t){var el=document.getElementById('tpMsg');if(el)el.textContent=t;}
+var confirmClear=false;
+tp.addEventListener('click',async function(e){
+  var b=e.target.closest('[data-t]');if(!b||b.disabled)return;var t=b.dataset.t;
+  if(t==='open')setMode('open');
+  else if(t==='mini')setMode('mini');
+  else if(t==='hide')setMode('hidden');
+  else if(t==='start')startT();
+  else if(t==='pause')pauseT();
+  else if(t==='reset')resetT();
+  else if(t==='err+'){T.errors++;updateCounters();}
+  else if(t==='err-'){T.errors=Math.max(0,T.errors-1);updateCounters();}
+  else if(t==='ok')finishT('Completada');
+  else if(t==='fail')finishT('No completada');
+  else if(t==='view'){var task=TASKS.filter(function(x){return x.id===T.task;})[0];setView(task.v);renderPanel();}
+  else if(t==='copy'){try{await navigator.clipboard.writeText(csv());msg('CSV copiado. Pégalo en una planilla.');}catch(err){T.csvShown=true;renderPanel();msg('No se pudo copiar: selecciona el texto y cópialo.');}}
+  else if(t==='dl'){var dl=null;try{dl=window.claude&&window.claude.use?await window.claude.use('downloads'):null;}catch(err){dl=null;}
+    if(dl){try{await dl.save({filename:'ensenas-test-'+new Date().toISOString().slice(0,10)+'.csv',data:'﻿'+csv()});msg('Archivo listo.');}catch(err){msg('Descarga cancelada.');}}
+    else{T.csvShown=true;renderPanel();msg('La descarga no está disponible aquí: copia el texto del recuadro.');}}
+  else if(t==='clear'){if(!confirmClear){confirmClear=true;msg('Toca «Borrar» otra vez para eliminar todos los resultados.');setTimeout(function(){confirmClear=false;},4000);}else{confirmClear=false;T.results=[];store.set('results',[]);T.csvShown=false;renderPanel();msg('Resultados borrados.');}}
+});
+tp.addEventListener('input',function(e){
+  if(e.target.id==='tpPart'){T.participant=e.target.value;store.set('participant',T.participant);}
+  if(e.target.id==='tpNotes'){T.notes=e.target.value;}
+});
+tp.addEventListener('change',function(e){
+  var id=e.target.id;
+  if(id==='tpTask'){T.task=e.target.value;renderPanel();}
+  if(id==='tpAuto')T.auto=e.target.checked;
+  if(id==='tpHeat'){T.heat=e.target.checked;render();}
+  if(id==='tpFrame'){T.outFrame=e.target.checked;render();}
+  if(id==='tpBar'){document.body.classList.toggle('nobar',e.target.checked);layout();}
+});
+document.addEventListener('keydown',function(e){if(e.ctrlKey&&e.shiftKey&&(e.key==='T'||e.key==='t')){e.preventDefault();setMode(T.mode==='hidden'?'open':'hidden');}});
+var hotTaps=[];hot.addEventListener('click',function(){var n=Date.now();hotTaps=hotTaps.filter(function(x){return n-x<900;});hotTaps.push(n);if(hotTaps.length>=3){hotTaps=[];setMode('open');}});
+setInterval(function(){if(T.running){var el=document.getElementById('tpt');if(el)el.textContent=fmt(elapsed());}},100);
+
+// ---------- Inicio ----------
+render();layout();renderPanel();
+})();
+</script>
+</body>
+</html>
